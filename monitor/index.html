@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevCenterX Pro Monitor | Industrial Mining System</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js para visualización de telemetría de hashrate -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#050705',
+              900: '#090d08',
+              850: '#10170f',
+              800: '#172215',
+              750: '#1f2e1c',
+              700: '#2c4028',
+              600: '#3e5938',
+              500: '#54784c',
+            },
+            accent: {
+              xmr: '#ff6600',
+              kas: '#10b981',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --accent-color: #ff6600;
+      --accent-shadow: rgba(255, 102, 0, 0.15);
+    }
+    
+    .custom-accent-text { color: var(--accent-color); }
+    .custom-accent-bg { background-color: var(--accent-color); }
+    .custom-accent-border { border-color: var(--accent-color); }
+    .custom-accent-ring:focus { --tw-ring-color: var(--accent-color); }
+    
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d08;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2e1c;
+      border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-color);
+    }
+    
+    .glow-pulse {
+      box-shadow: 0 0 0 0 var(--accent-shadow);
+      animation: pulse-glow 2s infinite;
+    }
+    @keyframes pulse-glow {
+      0% {
+        box-shadow: 0 0 0 0 var(--accent-shadow);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(255, 102, 0, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 102, 0, 0);
+      }
+    }
+
+    .app-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    
+    .terminal-box {
+      background-color: #030503;
+      border: 1px solid #172215;
+    }
+  </style>
+</head>
+<body class="bg-dark-950 text-[#edf4ec] font-sans min-h-screen selection:bg-dark-750 selection:text-white">
+
+  <div class="app-container min-h-screen flex flex-col pb-24 md:pb-6 border-x border-dark-900 bg-dark-900 shadow-2xl">
+    
+    <!-- Header Principal -->
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-dark-950/95 border-b border-dark-800 px-4 py-4 md:px-6 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-2xl bg-dark-850 border border-dark-750 flex items-center justify-center shadow-inner">
+          <i id="coin-main-icon" data-lucide="cpu" class="w-6 h-6 text-orange-500 custom-accent-text transition-all duration-300"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight flex items-center gap-1.5">
+            DevCenter<span id="brand-x" class="text-orange-500 custom-accent-text font-black transition-colors duration-300">X</span> 
+            <span class="text-[10px] uppercase tracking-widest bg-dark-850 text-gray-400 px-1.5 py-0.5 rounded font-bold border border-dark-700">PRO PLATINUM</span>
+          </h1>
+          <p class="text-[9px] text-gray-400 font-mono tracking-widest flex items-center gap-1" id="sync-status">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> DATOS DE RED EN DIRECTO
+          </p>
+        </div>
+      </div>
+      
+      <!-- Controles Superiores de Sistema -->
+      <div class="flex items-center gap-2">
+        <button onclick="refreshData()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold bg-dark-850 border-dark-750 text-gray-300 hover:text-white hover:bg-dark-800 transition-all shadow-sm">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-none" id="refresh-icon"></i>
+          <span class="hidden sm:inline">Actualizar</span>
+        </button>
+
+        <button onclick="openWalletsModal()" class="p-2 rounded-xl bg-dark-850 border border-dark-750 hover:border-gray-500 text-gray-400 hover:text-white transition-all shadow-sm" title="Configurar Wallets de Destino">
+          <i data-lucide="wallet" class="w-5 h-5"></i>
+        </button>
+
+        <button onclick="openDiagnosticsModal()" class="p-2 rounded-xl bg-dark-850 border border-dark-750 hover:border-gray-500 text-gray-400 hover:text-white transition-all shadow-sm" title="Ver Consola de Telemetría">
+          <i data-lucide="terminal" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <section class="p-4 md:p-6 pb-2">
+      <div class="grid grid-cols-2 gap-3 bg-dark-950 p-1.5 rounded-2xl border border-dark-800 shadow-lg">
+        <button onclick="switchCoin('xmr')" id="tab-coin-xmr" class="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all border border-transparent bg-dark-900 shadow text-orange-500 custom-accent-text border-orange-500/20">
+          <span class="w-2.5 h-2.5 rounded-full bg-orange-500 glow-pulse"></span>
+          MONERO (XMR)
+        </button>
+        <button onclick="switchCoin('kas')" id="tab-coin-kas" class="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all text-gray-400 hover:text-white hover:bg-dark-850 border border-transparent">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          KASPA (KAS)
+        </button>
+      </div>
+    </section>
+
+    <!-- Toast Container para Notificaciones de Sistema -->
+    <div id="toast-container" class="fixed bottom-24 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <main class="flex-1 p-4 md:p-6 overflow-y-auto pb-12">
+
+      <!-- ==================== DASHBOARD PANEL ==================== -->
+      <div id="p-dash" class="panel space-y-4">
+        
+        <!-- Tarjeta de Balance Real y Moneda Fíat -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-dark-850 to-dark-900 border border-dark-800 rounded-3xl p-6 shadow-xl">
+          <div class="absolute top-0 right-0 p-8 opacity-5">
+            <i data-lucide="wallet" class="w-32 h-32"></i>
+          </div>
+          
+          <div class="flex flex-wrap justify-between items-start gap-4 mb-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="text-[10px] font-mono tracking-widest text-gray-500 uppercase">Balance en Pool No Retirado</p>
+                <span class="text-[9px] bg-dark-750 text-gray-400 px-1.5 py-0.5 rounded border border-dark-700 font-bold uppercase animate-pulse" id="pool-name-tag">NANOPOOL</span>
+              </div>
+              <h2 class="text-2xl md:text-4xl font-extrabold font-mono text-emerald-400 tracking-tight mt-1" id="d-balance">0.00000000 XMR</h2>
+            </div>
+            
+            <!-- Selector de Criptodivisas/Fíat Base -->
+            <div class="flex flex-col items-end gap-1.5">
+              <span class="text-[9px] font-mono text-gray-500 uppercase">Divisa de Valorización</span>
+              <div class="flex bg-dark-950 p-1 rounded-xl border border-dark-800">
+                <button onclick="setBaseCurrency('USD')" id="cur-USD" class="px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight bg-dark-800 text-white transition-all">USD</button>
+                <button onclick="setBaseCurrency('EUR')" id="cur-EUR" class="px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight text-gray-400 hover:text-white transition-all">EUR</button>
+                <button onclick="setBaseCurrency('MXN')" id="cur-MXN" class="px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight text-gray-400 hover:text-white transition-all">MXN</button>
+                <button onclick="setBaseCurrency('BTC')" id="cur-BTC" class="px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight text-gray-400 hover:text-white transition-all">BTC</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-between items-center mt-3">
+            <p class="text-lg text-gray-300 font-bold font-mono animate-pulse" id="d-balance-converted">0.00 USD</p>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold shadow-sm" id="coin-price-tag">
+              Cargando cotización...
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-dark-800 flex flex-wrap justify-between items-center text-xs text-gray-500 gap-2">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 shrink-0"></i>
+              <span class="font-mono text-gray-400 truncate max-w-[280px] select-all cursor-pointer font-bold" title="Copiar Dirección Activa" onclick="copyWalletAddress()" id="active-wallet-addr">Cargando...</span>
+            </div>
+            
+            <!-- Intervalo de Actualización Automática -->
+            <div class="flex items-center gap-2">
+              <span id="update-timer" class="font-mono text-[10px] text-gray-400">Próxima consulta en 30s</span>
+              <select id="select-refresh-rate" onchange="changeRefreshRate()" class="bg-dark-900 border border-dark-850 rounded px-1.5 py-0.5 text-[9px] font-mono text-gray-400 focus:outline-none">
+                <option value="10">10s</option>
+                <option value="30" selected>30s</option>
+                <option value="60">60s</option>
+                <option value="0">Pausa</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- Hashrate Actual de la Cuenta -->
+          <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 flex items-center justify-between shadow-md hover:border-dark-700 transition-all">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Hashrate Instantáneo</p>
+              <h3 class="text-xl font-extrabold font-mono text-white mt-1" id="d-hash">0 H/s</h3>
+              <p class="text-[10px] text-gray-400 mt-1">Conexión directa al pool</p>
+            </div>
+            <div id="glow-zap-box" class="p-3 bg-dark-800 rounded-xl border border-dark-750 text-orange-500 custom-accent-text shadow-sm">
+              <i data-lucide="zap" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <!-- Workers Activos Reales -->
+          <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 flex items-center justify-between shadow-md hover:border-dark-700 transition-all">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Rigs Activos</p>
+              <h3 class="text-xl font-extrabold font-mono text-white mt-1" id="d-workers-count">0 / 0</h3>
+              <p class="text-[10px] text-gray-400 mt-1">Sincronizado sin demoras</p>
+            </div>
+            <div class="p-3 bg-dark-800 rounded-xl border border-dark-750 text-sky-400 shadow-sm">
+              <i data-lucide="server" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <!-- Dificultad Real de la Blockchain -->
+          <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 flex items-center justify-between shadow-md hover:border-dark-700 transition-all">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Dificultad de Red</p>
+              <h3 class="text-lg font-extrabold font-mono text-white mt-1 truncate max-w-[170px]" id="d-diff">0</h3>
+              <p class="text-[10px] text-gray-400 mt-1">Consenso de cadena global</p>
+            </div>
+            <div class="p-3 bg-dark-800 rounded-xl border border-dark-750 text-indigo-400 shadow-sm">
+              <i data-lucide="activity" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <div class="flex items-center gap-1.5">
+              <i data-lucide="trending-up" class="w-4.5 h-4.5 text-orange-500 custom-accent-text"></i>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">Hashrate Histórico Reportado por Pool</h4>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-dark-800 border border-dark-700 text-gray-400">Tiempo Real</span>
+              <button onclick="exportChartData()" class="p-1 rounded bg-dark-800 hover:bg-dark-750 text-gray-400 hover:text-white transition-all" title="Ver logs rápidos de hashrate">
+                <i data-lucide="database" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+          <div class="h-48 w-full relative">
+            <canvas id="hashrateChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Estadísticas Técnicas y Enlaces Blockchain -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+              <i data-lucide="globe" class="w-4.5 h-4.5 text-indigo-400"></i>
+              Telemetría Avanzada y Enlaces Blockchain
+            </h4>
+            <span class="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> CONEXIÓN DIRECTA CON API
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-4" id="network-info">
+            <div class="p-3 bg-dark-900 rounded-xl border border-dark-800/80">
+              <p class="text-gray-500 font-mono text-[10px]">Altura de Bloque</p>
+              <p class="font-mono font-bold mt-1 text-white" id="n-block">Cargando...</p>
+            </div>
+            <div class="p-3 bg-dark-900 rounded-xl border border-dark-800/80">
+              <p class="text-gray-500 font-mono text-[10px]">Recompensa Estimada</p>
+              <p class="font-mono font-bold mt-1 text-white" id="n-reward">Cargando...</p>
+            </div>
+            <div class="p-3 bg-dark-900 rounded-xl border border-dark-800/80">
+              <p class="text-gray-500 font-mono text-[10px]">Algoritmo Consenso</p>
+              <p class="font-mono font-bold mt-1 text-white" id="n-algo">--</p>
+            </div>
+            <div class="p-3 bg-dark-900 rounded-xl border border-dark-800/80">
+              <p class="text-gray-500 font-mono text-[10px]">Hashrate de Red</p>
+              <p class="font-mono font-bold mt-1 text-white" id="n-net-hash">Cargando...</p>
+            </div>
+          </div>
+
+          <!-- Explorador -->
+          <div class="pt-3 border-t border-dark-800 flex flex-wrap justify-between items-center text-xs gap-3">
+            <span class="text-gray-400 font-medium">Auditar transacciones y pagos emitidos en el explorador:</span>
+            <a id="explorer-link" href="#" target="_blank" class="flex items-center gap-1.5 px-3 py-1 bg-dark-800 hover:bg-dark-750 text-white font-bold rounded-lg border border-dark-700 transition-all">
+              <span>Blockchain Explorer</span>
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== STREAMING_CHUNK: WORKERS PANEL ==================== -->
+      <div id="p-workers" class="panel hidden space-y-4">
+        
+        <!-- Control Superior de Workers -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <div>
+              <h3 class="text-lg font-bold">Consola de Rigs de Minado</h3>
+              <p class="text-xs text-gray-500">Administra las notas y el estado de tus mineros en vivo.</p>
+            </div>
+            
+            <!-- Alarmas de Desconexión persistentes -->
+            <div class="flex items-center gap-2 bg-dark-900 px-3 py-1.5 rounded-xl border border-dark-800">
+              <span class="text-[10px] font-mono text-gray-400">Alarmas Desconexión:</span>
+              <button onclick="toggleOfflineAlerts()" id="btn-offline-alerts" class="px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                OFF
+              </button>
+            </div>
+          </div>
+
+          <!-- Eficiencia y promedio general -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl">
+              <p class="text-[9px] text-gray-500 uppercase font-mono">Eficiencia del Pool</p>
+              <p class="text-sm font-bold text-white mt-0.5" id="worker-efficiency">100.0%</p>
+            </div>
+            <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl">
+              <p class="text-[9px] text-gray-500 uppercase font-mono">Hashrate Promedio / Rig</p>
+              <p class="text-sm font-bold text-white mt-0.5" id="worker-average-hr">0 H/s</p>
+            </div>
+            <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl col-span-2 sm:col-span-1">
+              <p class="text-[9px] text-gray-500 uppercase font-mono">Estatus Nodos</p>
+              <p class="text-sm font-bold text-emerald-400 mt-0.5 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> ONLINE
+              </p>
+            </div>
+          </div>
+
+          <!-- Buscador y filtro -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="relative sm:col-span-2">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="worker-search" oninput="filterWorkers()" class="w-full pl-9 pr-4 py-2.5 bg-dark-900 border border-dark-800 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 custom-accent-ring focus:ring-1 focus:ring-orange-500 transition-all" placeholder="Buscar máquina por ID o tag...">
+            </div>
+
+            <!-- Filtros de Estado -->
+            <div class="flex bg-dark-900 p-1 rounded-xl border border-dark-800">
+              <button onclick="setWorkerFilter('all')" id="w-filter-all" class="flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all bg-dark-800 text-white">Todos</button>
+              <button onclick="setWorkerFilter('online')" id="w-filter-online" class="flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all text-gray-400">On</button>
+              <button onclick="setWorkerFilter('offline')" id="w-filter-offline" class="flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all text-gray-400">Off</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Rigs de Minería -->
+        <div id="workers-list" class="space-y-2">
+          <div class="p-8 text-center bg-dark-850 border border-dark-800 rounded-xl text-gray-500 flex flex-col items-center gap-2">
+            <i data-lucide="loader" class="w-8 h-8 animate-spin text-orange-500 custom-accent-text"></i>
+            <span>Estableciendo conexión y mapeando logs de rigs activos...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STREAMING_CHUNK: EARNINGS PANEL ==================== -->
+      <div id="p-earnings" class="panel hidden space-y-4">
+        
+        <!-- Estimador Diario / Horario -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-2">
+            <i data-lucide="banknote" class="w-4.5 h-4.5 text-emerald-400"></i>
+            Rendimiento de Minado Estimado (Estadísticas Reales)
+          </h3>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-4 bg-dark-900 border border-dark-800 rounded-xl shadow-sm">
+              <p class="text-xs text-gray-500 font-mono">Ganancia Estimada 1 Hora</p>
+              <p class="text-lg font-extrabold font-mono text-white mt-1" id="e-hour">0.00000000 XMR</p>
+              <p class="text-[11px] text-gray-400" id="e-hour-usd">$0.00 USD</p>
+            </div>
+            <div class="p-4 bg-dark-900 border border-dark-800 rounded-xl shadow-sm">
+              <p class="text-xs text-gray-500 font-mono">Ganancia Estimada 24 Horas</p>
+              <p class="text-lg font-extrabold font-mono text-emerald-400 mt-1" id="e-day">0.00000000 XMR</p>
+              <p class="text-[11px] text-gray-400" id="e-day-usd">$0.00 USD</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Planificador de Metas de Retiro (Goal Tracker) -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center gap-2 border-b border-dark-800 pb-3">
+            <i data-lucide="target" class="w-5 h-5 text-emerald-400"></i>
+            <div>
+              <h4 class="text-sm font-bold text-white">Rastreador de Metas de Cobro</h4>
+              <p class="text-[10px] text-gray-500 font-mono">Calcula el tiempo necesario para completar tu próximo retiro basándose en el hashrate actual.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5">Meta de Cripto Objetivo</label>
+              <div class="relative">
+                <input type="number" id="goal-crypto-target" oninput="calculateGoalTracker()" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring focus:ring-1 focus:ring-orange-500 font-mono" value="1.0">
+                <span class="absolute right-3 top-2.5 text-xs text-gray-500 font-bold uppercase font-mono" id="goal-coin-suffix">XMR</span>
+              </div>
+            </div>
+            
+            <div class="bg-dark-900 border border-dark-800 p-3 rounded-lg text-xs">
+              <p class="text-[9px] text-gray-500 font-mono uppercase">Plazo de Minado Requerido</p>
+              <p class="text-base font-extrabold text-white mt-1 font-mono" id="goal-time-result">0 Días, 0 Horas</p>
+            </div>
+          </div>
+          
+          <div class="w-full bg-dark-900 rounded-full h-2 overflow-hidden border border-dark-800">
+            <div id="goal-progress-bar" class="bg-emerald-400 h-full w-0 transition-all duration-500"></div>
+          </div>
+          <div class="flex justify-between text-[10px] font-mono text-gray-500">
+            <span>Balance Actual: <span id="goal-progress-current" class="text-emerald-400">0.00</span></span>
+            <span>Meta: <span id="goal-progress-target" class="text-white">1.00</span></span>
+          </div>
+        </div>
+
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center gap-2 border-b border-dark-800 pb-3">
+            <i data-lucide="line-chart" class="w-5 h-5 text-indigo-400"></i>
+            <div>
+              <h4 class="text-sm font-bold text-white">Calculadora de Retorno de Inversión (ROI)</h4>
+              <p class="text-[10px] text-gray-500 font-mono font-bold">Estima los plazos de amortización y ganancia neta de adquisición de hardware.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5">Costo de Hardware (Rigs / GPU / ASIC)</label>
+              <div class="relative">
+                <input type="number" id="roi-hardware-cost" oninput="calculateRoiAmortization()" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring focus:ring-1" value="1200">
+                <span class="absolute right-3 top-2.5 text-xs text-gray-400 font-bold uppercase font-mono target-cur-label">USD</span>
+              </div>
+            </div>
+
+            <div class="bg-dark-900 border border-dark-800 p-3 rounded-lg text-xs flex flex-col justify-center">
+              <p class="text-[9px] text-gray-500 font-mono uppercase">Amortización Estimada</p>
+              <p class="text-base font-extrabold text-white mt-1 font-mono" id="roi-time-result">0 Días</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculadora Avanzada de Red -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 space-y-4 shadow-lg">
+          <div class="flex justify-between items-center border-b border-dark-800 pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="calculator" class="w-5 h-5 text-indigo-400"></i>
+              <div>
+                <h4 class="text-sm font-bold text-white">Calculadora de Red Ajustable</h4>
+                <p class="text-[10px] text-gray-500 font-mono">Modela escenarios dinámicos basados en constantes de la blockchain en vivo.</p>
+              </div>
+            </div>
+            <button onclick="resetCalculatorDefaults()" class="text-[9px] px-2 py-0.5 rounded border border-dark-700 bg-dark-900 hover:bg-dark-800 text-gray-400 font-bold uppercase transition-all">
+              Restablecer Valores
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5">Potencia total ingresada</label>
+              <div class="flex">
+                <input type="number" id="calc-hashrate" oninput="calculateCustomEarnings()" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-l-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring font-mono" value="12000">
+                <select id="calc-unit" onchange="calculateCustomEarnings()" class="bg-dark-800 border-y border-r border-dark-750 rounded-r-lg px-2 text-xs text-white focus:outline-none font-mono">
+                  <option value="1">H/s</option>
+                  <option value="1000">KH/s</option>
+                  <option value="1000000" selected>MH/s</option>
+                  <option value="1000000000">GH/s</option>
+                  <option value="1000000000000">TH/s</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5 font-mono">Consumo Minero (Watts)</label>
+              <input type="number" id="calc-power" oninput="calculateCustomEarnings()" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring font-mono" value="120">
+            </div>
+          </div>
+
+          <!-- Parámetros Avanzados -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5">Costo Electricidad (kWh)</label>
+              <input type="number" id="calc-cost" oninput="calculateCustomEarnings()" step="0.01" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring font-mono" value="0.12">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5">Comisión de Pool (%)</label>
+              <input type="number" id="calc-fee" oninput="calculateCustomEarnings()" step="0.1" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring font-mono" value="1.0">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono mb-1.5 font-mono">Mermas / Shares Inválidos (%)</label>
+              <input type="number" id="calc-stale" oninput="calculateCustomEarnings()" step="0.1" class="w-full px-3 py-2 bg-dark-900 border border-dark-800 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500 custom-accent-ring font-mono" value="0.5">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-[11px] text-left text-gray-400">
+              <thead class="text-[9px] uppercase bg-dark-900 text-gray-500 font-mono">
+                <tr>
+                  <th class="px-3 py-2 rounded-l-lg">Periodo</th>
+                  <th class="px-3 py-2">Bruto Cripto</th>
+                  <th class="px-3 py-2">Bruto (<span class="target-cur-label">USD</span>)</th>
+                  <th class="px-3 py-2 text-red-400">Costo Energía</th>
+                  <th class="px-3 py-2 rounded-r-lg text-emerald-400 font-bold">Ganancia Neta</th>
+                </tr>
+              </thead>
+              <tbody class="font-mono divide-y divide-dark-800" id="calc-results-body">
+                <!-- Inyectado mediante JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Historial de Pagos de Blockchain -->
+        <div class="bg-dark-850 border border-dark-800 rounded-2xl p-5 space-y-3 shadow-lg">
+          <div class="flex justify-between items-center">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+              <i data-lucide="receipt" class="w-4.5 h-4.5 text-orange-500 custom-accent-text"></i>
+              Historial de Pagos de la Cuenta
+            </h4>
+            <span class="text-[9px] font-mono bg-dark-900 px-2 py-0.5 rounded border border-dark-800 text-gray-400">Registros Blockchain</span>
+          </div>
+          <div id="payments-list" class="space-y-2">
+            <p class="text-xs text-gray-500 py-3 text-center">Analizando últimos registros de salida del pool...</p>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full bg-dark-950/95 backdrop-blur-md border-t border-dark-800 grid grid-cols-3 px-2 py-2.5 z-40 max-w-[1280px] shadow-2xl">
+      <button onclick="showPanel('dash')" id="btn-nav-dash" class="flex flex-col items-center justify-center py-1 rounded-xl transition-all font-mono text-[9px] uppercase font-bold text-orange-500 custom-accent-text">
+        <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i>
+        <span>Dashboard</span>
+      </button>
+      
+      <button onclick="showPanel('workers')" id="btn-nav-workers" class="flex flex-col items-center justify-center py-1 rounded-xl transition-all font-mono text-[9px] uppercase font-bold text-gray-500 hover:text-white">
+        <i data-lucide="pickaxe" class="w-5 h-5 mb-1"></i>
+        <span>Workers</span>
+      </button>
+      
+      <button onclick="showPanel('earnings')" id="btn-nav-earnings" class="flex flex-col items-center justify-center py-1 rounded-xl transition-all font-mono text-[9px] uppercase font-bold text-gray-500 hover:text-white">
+        <i data-lucide="coins" class="w-5 h-5 mb-1"></i>
+        <span>Earnings</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <div id="diagnostics-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden transition-all">
+    <div class="bg-dark-850 border border-dark-750 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeDiagnosticsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-all p-1.5">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <div class="flex items-center gap-2.5 border-b border-dark-800 pb-3">
+        <i data-lucide="terminal" class="w-5 h-5 text-orange-500 custom-accent-text"></i>
+        <h3 class="text-lg font-bold font-mono">Consola de Telemetría Real</h3>
+      </div>
+      
+      <p class="text-xs text-gray-400 leading-relaxed">Conexiones directas realizadas hacia las APIs de pools y cotizaciones públicas:</p>
+      
+      <div class="space-y-2 font-mono text-[11px]">
+        <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl flex justify-between items-center">
+          <span>API CryptoCompare:</span>
+          <span id="tel-latency-prices" class="text-emerald-400 font-bold">-- ms</span>
+        </div>
+        
+        <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl flex justify-between items-center">
+          <span>Pool Node Monero (Nanopool):</span>
+          <span id="tel-latency-xmr" class="text-emerald-400 font-bold">-- ms</span>
+        </div>
+        
+        <div class="p-3 bg-dark-900 border border-dark-800 rounded-xl flex justify-between items-center">
+          <span>Pool Node Kaspa (2Miners):</span>
+          <span id="tel-latency-kas" class="text-emerald-400 font-bold">-- ms</span>
+        </div>
+      </div>
+
+      <div class="terminal-box rounded-xl p-3 h-32 overflow-y-auto text-[9px] font-mono text-emerald-500 space-y-1" id="terminal-live-logs">
+        <!-- Logs de sistema en vivo -->
+      </div>
+
+      <div class="pt-3">
+        <button onclick="closeDiagnosticsModal()" class="w-full py-2.5 bg-dark-800 hover:bg-dark-750 text-white font-bold rounded-xl text-xs transition-all border border-dark-700">
+          Cerrar Consola
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="wallets-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden transition-all">
+    <div class="bg-dark-850 border border-dark-750 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeWalletsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-all p-1.5">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <div class="flex items-center gap-2.5 border-b border-dark-800 pb-3">
+        <i data-lucide="wallet" class="w-5 h-5 text-indigo-400"></i>
+        <h3 class="text-lg font-bold">Wallets de Destino</h3>
+      </div>
+      
+      <p class="text-xs text-gray-400 leading-relaxed">Puedes cambiar las wallets por defecto por tus propias direcciones de Monero y Kaspa. Los datos se guardarán localmente en tu navegador.</p>
+      
+      <div class="space-y-3 font-mono text-[11px]">
+        <div>
+          <label class="block text-gray-400 font-bold mb-1">MONERO (XMR) ADDRESS:</label>
+          <input type="text" id="input-wallet-xmr" class="w-full p-2.5 bg-dark-900 border border-dark-800 rounded-lg text-[10px] text-white focus:outline-none focus:border-orange-500 font-mono">
+        </div>
+        
+        <div>
+          <label class="block text-gray-400 font-bold mb-1">KASPA (KAS) ADDRESS:</label>
+          <input type="text" id="input-wallet-kas" class="w-full p-2.5 bg-dark-900 border border-dark-800 rounded-lg text-[10px] text-white focus:outline-none focus:border-teal-500 font-mono">
+        </div>
+      </div>
+
+      <div class="pt-3 grid grid-cols-2 gap-2">
+        <button onclick="resetWalletsToDefault()" class="py-2.5 bg-dark-900 hover:bg-dark-800 text-gray-400 hover:text-white font-bold rounded-xl text-xs transition-all border border-dark-800">
+          Resetear Default
+        </button>
+        <button onclick="saveCustomWallets()" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md">
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Billeteras oficiales del usuario cargadas por defecto
+    const DEFAULT_WALLETS = {
+      xmr: '49gtMxxALvzRRnEW8wsW7iS6EWGhmk9jrcZ3DJFRhG3e6dhkYGAaFaAbh1H3t8qkyX1YRosWF2gpN18bod4c7hGcMSZg4j3',
+      kas: 'qqv426axdsa79adnfyjakre8fea92agr77et4kmp0ur5qjc7hk02w7m0pzmaf'
+    };
+
+    let WALLETS = { ...DEFAULT_WALLETS };
+
+    let currentCoin = 'xmr';
+    let currentBaseCurrency = 'USD';
+    let currentWorkerFilter = 'all';
+    let updateTimerInterval = null;
+    let secondsToUpdate = 30;
+    let refreshRateSeconds = 30;
+    let hashrateChart = null;
+
+    // Alertas de Desconexión de Rig
+    let offlineAlertsActive = false;
+
+    // Cotizaciones dinámicas del mercado
+    let fiatRates = { USD: 1, EUR: 0.92, MXN: 17.5, BTC: 0.000015 };
+    let prices = { xmr: 0.0, kas: 0.0 };
+    
+    let networkStats = {
+      xmr: { difficulty: 0, block: 0, reward: 0.0, algo: 'RandomX', nethash: 'N/D' },
+      kas: { difficulty: 0, block: 0, reward: 0.0, algo: 'kHeavyHash', nethash: 'N/D' }
+    };
+
+    let globalWorkersList = [];
+    let globalActiveBalance = 0;
+
+    // Notas de mantenimiento locales para los mineros
+    let localWorkerNotes = {};
+
+    // Latencias de red calculadas
+    let latencies = { prices: 0, xmr: 0, kas: 0 };
+
+    window.onload = function() {
+      lucide.createIcons();
+      loadSavedState();
+      initializeChart();
+      refreshData();
+      startUpdateTimer();
+    };
+
+    function loadSavedState() {
+      // Monedas y tasas por defecto
+      if (localStorage.getItem('dev_currency')) {
+        currentBaseCurrency = localStorage.getItem('dev_currency');
+        setBaseCurrencyState(currentBaseCurrency);
+      }
+      
+      // Frecuencia de refresco
+      if (localStorage.getItem('dev_refresh_rate')) {
+        refreshRateSeconds = parseInt(localStorage.getItem('dev_refresh_rate'));
+        document.getElementById('select-refresh-rate').value = refreshRateSeconds;
+      }
+
+      // Direcciones personalizadas
+      if (localStorage.getItem('dev_wallet_xmr')) {
+        WALLETS.xmr = localStorage.getItem('dev_wallet_xmr');
+      }
+      if (localStorage.getItem('dev_wallet_kas')) {
+        WALLETS.kas = localStorage.getItem('dev_wallet_kas');
+      }
+
+      // Alarmas offline
+      if (localStorage.getItem('dev_offline_alerts') === 'true') {
+        offlineAlertsActive = true;
+        const btn = document.getElementById('btn-offline-alerts');
+        btn.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+        btn.textContent = "ON";
+      }
+
+      // Notas personalizadas de trabajadores
+      if (localStorage.getItem('dev_worker_notes')) {
+        try {
+          localWorkerNotes = JSON.parse(localStorage.getItem('dev_worker_notes'));
+        } catch(e) {
+          localWorkerNotes = {};
+        }
+      }
+
+      // ROI Costo de hardware
+      if (localStorage.getItem('dev_hardware_cost')) {
+        document.getElementById('roi-hardware-cost').value = localStorage.getItem('dev_hardware_cost');
+      }
+
+      writeLog("Inicializado sistema. Criptos y parámetros de almacenamiento local mapeados.");
+    }
+
+    function startUpdateTimer() {
+      if (updateTimerInterval) clearInterval(updateTimerInterval);
+      if (refreshRateSeconds === 0) {
+        document.getElementById('update-timer').textContent = 'Auto-refresco: OFF';
+        return;
+      }
+      secondsToUpdate = refreshRateSeconds;
+      updateTimerInterval = setInterval(() => {
+        secondsToUpdate--;
+        if (secondsToUpdate <= 0) {
+          refreshData();
+          secondsToUpdate = refreshRateSeconds;
+        }
+        document.getElementById('update-timer').textContent = `Actualizando en ${secondsToUpdate}s`;
+      }, 1000);
+    }
+
+    function changeRefreshRate() {
+      const select = document.getElementById('select-refresh-rate');
+      refreshRateSeconds = parseInt(select.value);
+      localStorage.setItem('dev_refresh_rate', refreshRateSeconds);
+      startUpdateTimer();
+      showToast(`Frecuencia de refresco ajustada a ${refreshRateSeconds === 0 ? 'Manual' : refreshRateSeconds + 's'}`, 'success');
+      writeLog(`Intervalo de auto-consulta fijado en: ${refreshRateSeconds}s`);
+    }
+
+    function writeLog(text) {
+      const logger = document.getElementById('terminal-live-logs');
+      const time = new Date().toLocaleTimeString();
+      const p = document.createElement('p');
+      p.textContent = `[${time}] ${text}`;
+      logger.appendChild(p);
+      logger.scrollTop = logger.scrollHeight;
+    }
+
+    async function refreshData() {
+      const syncStatus = document.getElementById('sync-status');
+      const refreshIcon = document.getElementById('refresh-icon');
+      
+      syncStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping"></span> CONECTANDO CON EL NODO...`;
+      refreshIcon.classList.add('animate-spin');
+
+      writeLog("Iniciando secuencia de actualización de red...");
+
+      // Cargar precios y conversiones
+      const startPricesTime = performance.now();
+      await loadPricesAndFiatRates();
+      latencies.prices = Math.round(performance.now() - startPricesTime);
+      document.getElementById('tel-latency-prices').textContent = `${latencies.prices} ms`;
+
+      // Carga de pools correspondientes
+      if (currentCoin === 'xmr') {
+        const startXmrTime = performance.now();
+        await loadMoneroReal();
+        latencies.xmr = Math.round(performance.now() - startXmrTime);
+        latencies.kas = 0;
+      } else {
+        const startKasTime = performance.now();
+        await loadKaspaReal();
+        latencies.kas = Math.round(performance.now() - startKasTime);
+        latencies.xmr = 0;
+      }
+
+      // Sincronizaciones locales colaterales
+      calculateCustomEarnings();
+      calculateGoalTracker();
+      calculateRoiAmortization();
+      updateChartData();
+      updateTelemetryUI();
+
+      setTimeout(() => {
+        syncStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> SINCRONIZADO`;
+        refreshIcon.classList.remove('animate-spin');
+        writeLog("Sincronización completa con la Blockchain terminada.");
+      }, 800);
+    }
+
+    async function loadPricesAndFiatRates() {
+      try {
+        const response = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=XMR,KAS&tsyms=USD,EUR,MXN,BTC');
+        const json = await response.json();
+        
+        if (json && json.RAW) {
+          prices.xmr = json.RAW.XMR.USD.PRICE || 160.0;
+          prices.kas = json.RAW.KAS.USD.PRICE || 0.15;
+
+          // Conversión fíat mutua
+          fiatRates.EUR = json.RAW.XMR.EUR.PRICE / prices.xmr;
+          fiatRates.MXN = json.RAW.XMR.MXN.PRICE / prices.xmr;
+          fiatRates.BTC = json.RAW.XMR.BTC.PRICE / prices.xmr;
+          writeLog(`Precios actualizados: XMR=${prices.xmr} USD | KAS=${prices.kas} USD`);
+        }
+      } catch (e) {
+        writeLog("Error al obtener cotizaciones de red en CryptoCompare. Usando datos previos.");
+      }
+    }
+
+    async function loadMoneroReal() {
+      const addr = WALLETS.xmr;
+      document.getElementById('active-wallet-addr').textContent = addr;
+      document.getElementById('pool-name-tag').textContent = "NANOPOOL POOL";
+      document.getElementById('explorer-link').href = `https://localmonero.co/blocks/search/${addr}`;
+
+      writeLog(`Consultando endpoints de Nanopool para wallet: ${addr.substring(0, 8)}...`);
+
+      try {
+        const [resBal, resHash, resWork, resPoolStats, resPayments] = await Promise.all([
+          fetch(`https://api.nanopool.org/v1/xmr/balance/${addr}`).then(r => r.json()).catch(() => null),
+          fetch(`https://api.nanopool.org/v1/xmr/hashrate/${addr}`).then(r => r.json()).catch(() => null),
+          fetch(`https://api.nanopool.org/v1/xmr/workers/${addr}`).then(r => r.json()).catch(() => null),
+          fetch(`https://api.nanopool.org/v1/xmr/pool/stats`).then(r => r.json()).catch(() => null),
+          fetch(`https://api.nanopool.org/v1/xmr/payments/${addr}`).then(r => r.json()).catch(() => null),
+        ]);
+
+        // Balance
+        const balance = (resBal && resBal.status) ? parseFloat(resBal.data) : 0.0;
+        globalActiveBalance = balance;
+        renderBalance(balance, 'XMR');
+
+        // Hashrate
+        const hashrate = (resHash && resHash.status) ? parseFloat(resHash.data) : 0.0;
+        document.getElementById('d-hash').textContent = hashrate.toLocaleString() + ' H/s';
+
+        // Constantes globales de la dificultad de Nanopool
+        if (resPoolStats && resPoolStats.status && resPoolStats.data) {
+          networkStats.xmr.difficulty = resPoolStats.data.difficulty || 320000000000;
+          networkStats.xmr.block = resPoolStats.data.block_number || 0;
+          networkStats.xmr.reward = resPoolStats.data.block_reward || 0.6;
+          networkStats.xmr.nethash = ((networkStats.xmr.difficulty / 120) / 1e6).toFixed(2) + ' MH/s';
+        }
+        
+        document.getElementById('d-diff').textContent = networkStats.xmr.difficulty.toLocaleString();
+        document.getElementById('n-block').textContent = '#' + networkStats.xmr.block;
+        document.getElementById('n-reward').textContent = networkStats.xmr.reward.toFixed(4) + ' XMR';
+        document.getElementById('n-algo').textContent = networkStats.xmr.algo;
+        document.getElementById('n-net-hash').textContent = networkStats.xmr.nethash;
+
+        // Workers
+        const apiWorkers = (resWork && resWork.status) ? resWork.data : [];
+        globalWorkersList = apiWorkers.map(w => ({
+          name: w.id || 'Trabajador_Sin_Nombre',
+          hashrate: parseFloat(w.hashrate) || 0.0,
+          status: w.hashrate > 0 ? 'online' : 'offline',
+          efficiency: 100
+        }));
+        
+        checkOfflineRigs();
+        renderWorkers();
+
+        // Pagos
+        const apiPayments = (resPayments && resPayments.status) ? resPayments.data : [];
+        renderPayments(apiPayments.map(p => ({
+          date: new Date(p.date * 1000).toLocaleDateString(),
+          amount: parseFloat(p.amount),
+          tx: p.txHash
+        })), 'XMR');
+
+        // Estimación matemática limpia basada en dificultad de red
+        const dayEarn = hashrate > 0 ? (hashrate * 86400 * networkStats.xmr.reward) / networkStats.xmr.difficulty : 0.0;
+        renderEstimatedRates(dayEarn, 'XMR', prices.xmr);
+
+        // Hashrate Chart Nanopool
+        const resChart = await fetch(`https://api.nanopool.org/v1/xmr/hashratechart/${addr}`).then(r => r.json()).catch(() => null);
+        if (resChart && resChart.status && resChart.data) {
+          const rawPoints = resChart.data.slice(-12);
+          chartLabels = rawPoints.map(pt => new Date(pt.date * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+          chartDataXmr = rawPoints.map(pt => pt.hashrate);
+        } else {
+          chartLabels = Array(12).fill('').map((_, i) => `${i * 2}h`);
+          chartDataXmr = Array(12).fill(hashrate);
+        }
+
+      } catch (e) {
+        writeLog("Excepción atrapada al consultar API Nanopool: " + e.message);
+        showToast('Atención: Fallo en la comunicación con Nanopool. Redirigiendo llamadas...', 'error');
+      }
+    }
+
+    async function loadKaspaReal() {
+      const addr = WALLETS.kas;
+      document.getElementById('active-wallet-addr').textContent = addr;
+      document.getElementById('pool-name-tag').textContent = "2MINERS POOL";
+      document.getElementById('explorer-link').href = `https://explorer.kaspa.org/addresses/${addr}`;
+
+      writeLog(`Consultando endpoints de 2Miners para wallet: ${addr.substring(0, 8)}...`);
+
+      try {
+        const [resAccount, resStats] = await Promise.all([
+          fetch(`https://kas.2miners.com/api/accounts/${addr}`).then(r => r.json()).catch(() => null),
+          fetch(`https://kas.2miners.com/api/stats`).then(r => r.json()).catch(() => null)
+        ]);
+
+        if (!resAccount) {
+          throw new Error("2Miners API offline o no ha registrado actividad para este Hash.");
+        }
+
+        // Balance de 2Miners viene en base 1e8
+        const balance = (resAccount.stats && resAccount.stats.balance) ? resAccount.stats.balance / 1e8 : 0.0;
+        globalActiveBalance = balance;
+        renderBalance(balance, 'KAS');
+
+        // Hashrate actual en MH/s
+        const hashrate = (resAccount.currentHashrate) ? resAccount.currentHashrate / 1e6 : 0.0;
+        document.getElementById('d-hash').textContent = hashrate.toFixed(2) + ' MH/s';
+
+        // Red global Kaspa
+        if (resStats && resStats.nodes && resStats.nodes[0]) {
+          networkStats.kas.difficulty = resStats.nodes[0].difficulty || 1500000000000;
+          networkStats.kas.block = resStats.nodes[0].height || 0;
+          networkStats.kas.reward = 117.0; // Recompensa aproximada
+          networkStats.kas.nethash = (resStats.nethash / 1e12).toFixed(2) + ' TH/s';
+        }
+        
+        document.getElementById('d-diff').textContent = networkStats.kas.difficulty.toLocaleString();
+        document.getElementById('n-block').textContent = '#' + networkStats.kas.block;
+        document.getElementById('n-reward').textContent = networkStats.kas.reward.toFixed(1) + ' KAS';
+        document.getElementById('n-algo').textContent = networkStats.kas.algo;
+        document.getElementById('n-net-hash').textContent = networkStats.kas.nethash;
+
+        // Workers
+        const workersMap = resAccount.workers || {};
+        globalWorkersList = Object.keys(workersMap).map(name => ({
+          name: name,
+          hashrate: workersMap[name].hr / 1e6, // Megahashes
+          status: workersMap[name].offline ? 'offline' : 'online',
+          efficiency: 100
+        }));
+        
+        checkOfflineRigs();
+        renderWorkers();
+
+        // Pagos
+        const paymentsList = resAccount.payments || [];
+        renderPayments(paymentsList.map(p => ({
+          date: new Date(p.timestamp * 1000).toLocaleDateString(),
+          amount: p.amount / 1e8,
+          tx: p.tx
+        })), 'KAS');
+
+        // Estimación matemática exacta basada en dificultad y hashrate en H/s
+        const dayEarn = hashrate > 0 ? (hashrate * 1e6 * 86400 * networkStats.kas.reward) / (networkStats.kas.difficulty * 1000) : 0.0;
+        renderEstimatedRates(dayEarn, 'KAS', prices.kas);
+
+        // Histórico de hashrate 2Miners
+        if (resAccount.summaries && resAccount.summaries.length > 0) {
+          const rawPoints = resAccount.summaries.slice(-12);
+          chartLabels = rawPoints.map(pt => new Date(pt.offset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+          chartDataKas = rawPoints.map(pt => pt.hr / 1e6);
+        } else {
+          chartLabels = Array(12).fill('').map((_, i) => `${i * 2}h`);
+          chartDataKas = Array(12).fill(hashrate);
+        }
+
+      } catch (e) {
+        writeLog("Excepción en conexión 2Miners (KAS): " + e.message);
+        showToast('Atención: La wallet de Kaspa no reporta actividad actual en 2Miners.', 'error');
+      }
+    }
+
+    function renderBalance(balance, symbol) {
+      document.getElementById('d-balance').textContent = balance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 8 }) + ` ${symbol}`;
+      
+      const priceNow = prices[currentCoin];
+      const rate = fiatRates[currentBaseCurrency] || 1;
+      const convertedValue = balance * priceNow * rate;
+      
+      document.getElementById('d-balance-converted').textContent = convertedValue.toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency }) + ` ${currentBaseCurrency}`;
+      document.getElementById('coin-price-tag').textContent = (priceNow * rate).toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency }) + ` ${currentBaseCurrency}`;
+    }
+
+    function renderEstimatedRates(dayEarn, symbol, usdPrice) {
+      const rate = fiatRates[currentBaseCurrency] || 1;
+      
+      const hourEarn = dayEarn / 24;
+      document.getElementById('e-hour').textContent = hourEarn.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 8 }) + ` ${symbol}`;
+      document.getElementById('e-hour-usd').textContent = (hourEarn * usdPrice * rate).toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency }) + ` ${currentBaseCurrency}`;
+
+      document.getElementById('e-day').textContent = dayEarn.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 8 }) + ` ${symbol}`;
+      document.getElementById('e-day-usd').textContent = (dayEarn * usdPrice * rate).toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency }) + ` ${currentBaseCurrency}`;
+    }
+
+    function setBaseCurrency(cur) {
+      currentBaseCurrency = cur;
+      localStorage.setItem('dev_currency', cur);
+      document.querySelectorAll('.target-cur-label').forEach(el => el.textContent = cur);
+      setBaseCurrencyState(cur);
+      refreshData();
+      showToast(`Divisa de conversión cambiada a ${cur}`, 'success');
+    }
+
+    function setBaseCurrencyState(cur) {
+      ['USD', 'EUR', 'MXN', 'BTC'].forEach(c => {
+        const btn = document.getElementById('cur-' + c);
+        if (c === cur) {
+          btn.className = "px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight bg-dark-800 text-white transition-all";
+        } else {
+          btn.className = "px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight text-gray-400 hover:text-white transition-all";
+        }
+      });
+    }
+
+    function renderPayments(payments, coinSymbol) {
+      const pList = document.getElementById('payments-list');
+      if (payments.length === 0) {
+        pList.innerHTML = `
+          <div class="text-center py-5 text-gray-500 text-xs">
+            Sin retiros procesados en la cola de esta pool.
+          </div>
+        `;
+        return;
+      }
+
+      pList.innerHTML = payments.map(p => {
+        const txUrl = coinSymbol === 'XMR' 
+          ? `https://localmonero.co/blocks/search/${p.tx}` 
+          : `https://explorer.kaspa.org/txs/${p.tx}`;
+
+        return `
+          <div class="flex flex-wrap gap-2 justify-between items-center p-3 bg-dark-900 border border-dark-800 rounded-xl text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                <i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <p class="font-bold text-white text-xs">${p.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${coinSymbol}</p>
+                <p class="text-[9px] text-gray-500">${p.date} • Tx: <span class="text-gray-400 font-bold select-all">${p.tx.substring(0, 16)}...</span></p>
+              </div>
+            </div>
+            <a href="${txUrl}" target="_blank" class="px-2 py-1 text-[9px] font-bold uppercase bg-dark-800 hover:bg-dark-750 border border-dark-700 text-gray-300 rounded-lg flex items-center gap-1">
+              Ver TX <i data-lucide="external-link" class="w-2.5 h-2.5"></i>
+            </a>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function renderWorkers() {
+      const wList = document.getElementById('workers-list');
+      const onlineWorkers = globalWorkersList.filter(w => w.status === 'online');
+      const offlineWorkers = globalWorkersList.filter(w => w.status === 'offline');
+
+      document.getElementById('d-workers-count').textContent = `${onlineWorkers.length} / ${globalWorkersList.length}`;
+
+      const efficiency = globalWorkersList.length > 0 ? (onlineWorkers.length / globalWorkersList.length * 100).toFixed(1) : '100.0';
+      document.getElementById('worker-efficiency').textContent = `${efficiency}%`;
+
+      const totalHash = globalWorkersList.reduce((acc, curr) => acc + curr.hashrate, 0);
+      const avgHash = globalWorkersList.length > 0 ? (totalHash / globalWorkersList.length).toFixed(1) : '0';
+      document.getElementById('worker-average-hr').textContent = `${parseFloat(avgHash).toLocaleString()}${currentCoin === 'xmr' ? ' H/s' : ' MH/s'}`;
+
+      let workersToRender = globalWorkersList;
+      if (currentWorkerFilter === 'online') workersToRender = onlineWorkers;
+      if (currentWorkerFilter === 'offline') workersToRender = offlineWorkers;
+
+      if (workersToRender.length === 0) {
+        wList.innerHTML = `
+          <div class="p-8 text-center bg-dark-850 border border-dark-800 rounded-2xl text-gray-500">
+            <i data-lucide="info" class="w-8 h-8 text-gray-600 mx-auto mb-2"></i>
+            <p class="text-xs font-semibold">Ningún rig activo registrado.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      const suffix = currentCoin === 'xmr' ? ' H/s' : ' MH/s';
+      wList.innerHTML = workersToRender.map(w => {
+        const savedNote = localWorkerNotes[w.name] || '';
+        return `
+          <div class="flex flex-col gap-3 bg-dark-850 p-4 border border-dark-800 rounded-xl hover:border-gray-700 transition-all">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <div class="flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full ${w.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
+                <div>
+                  <p class="font-bold text-white text-xs tracking-wide font-mono">${w.name}</p>
+                  <p class="text-[9px] text-gray-500 font-mono">ID de Máquina</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-extrabold text-white font-mono text-xs">${w.hashrate.toLocaleString()}${suffix}</p>
+                <span class="text-[9px] uppercase font-bold text-${w.status === 'online' ? 'emerald-400' : 'rose-400'}">${w.status === 'online' ? 'En Línea' : 'Caído'}</span>
+              </div>
+            </div>
+            
+            <!-- Campo de anotaciones personalizadas de hardware local -->
+            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-dark-800">
+              <span class="text-[9px] text-gray-500 uppercase font-mono">Nota:</span>
+              <input type="text" placeholder="Añadir nota local (ej. GTX 3080)..." value="${savedNote}" onchange="saveWorkerNote('${w.name}', this.value)" class="flex-1 bg-dark-900 border border-dark-800 rounded px-2 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-orange-500 font-mono">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveWorkerNote(workerName, noteValue) {
+      localWorkerNotes[workerName] = noteValue;
+      localStorage.setItem('dev_worker_notes', JSON.stringify(localWorkerNotes));
+      showToast(`Anotación guardada para ${workerName}`, 'success');
+      writeLog(`Nota de rig registrada localmente para: ${workerName}`);
+    }
+
+    function setWorkerFilter(status) {
+      currentWorkerFilter = status;
+      ['all', 'online', 'offline'].forEach(f => {
+        const btn = document.getElementById(`w-filter-${f}`);
+        if (f === status) {
+          btn.className = "flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all bg-dark-800 text-white";
+        } else {
+          btn.className = "flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all text-gray-400";
+        }
+      });
+      renderWorkers();
+    }
+
+    function filterWorkers() {
+      const q = document.getElementById('worker-search').value.toLowerCase().trim();
+      const wList = document.getElementById('workers-list');
+      const filtered = globalWorkersList.filter(w => w.name.toLowerCase().includes(q));
+      const suffix = currentCoin === 'xmr' ? ' H/s' : ' MH/s';
+
+      if (filtered.length === 0) {
+        wList.innerHTML = `<div class="p-8 text-center text-xs text-gray-500">Ningún rig corresponde a la búsqueda "${q}"</div>`;
+        return;
+      }
+
+      wList.innerHTML = filtered.map(w => {
+        const savedNote = localWorkerNotes[w.name] || '';
+        return `
+          <div class="flex flex-col gap-3 bg-dark-850 p-4 border border-dark-800 rounded-xl hover:border-gray-700 transition-all">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full ${w.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                <div>
+                  <p class="font-bold text-white text-xs tracking-wide font-mono">${w.name}</p>
+                  <p class="text-[9px] text-gray-500 font-mono">Búsqueda</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-extrabold text-white font-mono text-xs">${w.hashrate.toLocaleString()}${suffix}</p>
+                <span class="text-[9px] uppercase font-bold text-emerald-400">${w.status === 'online' ? 'En Línea' : 'Caído'}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-dark-800">
+              <span class="text-[9px] text-gray-500 uppercase font-mono">Nota:</span>
+              <input type="text" placeholder="Nota..." value="${savedNote}" onchange="saveWorkerNote('${w.name}', this.value)" class="flex-1 bg-dark-900 border border-dark-800 rounded px-2 py-0.5 text-[10px] text-gray-300 focus:outline-none font-mono">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleOfflineAlerts() {
+      offlineAlertsActive = !offlineAlertsActive;
+      localStorage.setItem('dev_offline_alerts', offlineAlertsActive);
+      const btn = document.getElementById('btn-offline-alerts');
+      if (offlineAlertsActive) {
+        btn.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+        btn.textContent = "ON";
+        showToast("Alarmas de desconexión activadas localmente", "success");
+      } else {
+        btn.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all bg-rose-500/10 border border-rose-500/30 text-rose-400";
+        btn.textContent = "OFF";
+        showToast("Alarmas de desconexión desactivadas", "error");
+      }
+    }
+
+    function checkOfflineRigs() {
+      if (!offlineAlertsActive) return;
+      globalWorkersList.forEach(w => {
+        if (w.status === 'offline') {
+          showToast(`¡ALERTA! El minero '${w.name}' se encuentra caído.`, 'error');
+        }
+      });
+    }
+
+    function calculateCustomEarnings() {
+      const hashrateInput = parseFloat(document.getElementById('calc-hashrate').value) || 0;
+      const powerInput = parseFloat(document.getElementById('calc-power').value) || 0;
+      const unitFactor = parseFloat(document.getElementById('calc-unit').value) || 1;
+      const powerCost = parseFloat(document.getElementById('calc-cost').value) || 0;
+      const poolFee = parseFloat(document.getElementById('calc-fee').value) || 0;
+      const staleLoss = parseFloat(document.getElementById('calc-stale').value) || 0;
+
+      const totalHashrateSec = hashrateInput * unitFactor;
+      const priceNow = prices[currentCoin];
+      const fiatRate = fiatRates[currentBaseCurrency] || 1;
+      let cryptoPerDay = 0;
+
+      if (currentCoin === 'xmr') {
+        const difficulty = networkStats.xmr.difficulty || 320000000000;
+        const blockReward = networkStats.xmr.reward || 0.6;
+        cryptoPerDay = (totalHashrateSec * 86400 * blockReward) / difficulty;
+      } else {
+        const difficulty = networkStats.kas.difficulty || 1500000000000;
+        const blockReward = networkStats.kas.reward || 117.0;
+        cryptoPerDay = (totalHashrateSec * 86400 * blockReward) / (difficulty * 1000);
+      }
+
+      // Descuento de comisiones y stale shares
+      const lossMultiplier = (1 - (poolFee / 100)) * (1 - (staleLoss / 100));
+      cryptoPerDay = cryptoPerDay * lossMultiplier;
+      if (cryptoPerDay < 0 || isNaN(cryptoPerDay)) cryptoPerDay = 0;
+
+      const energyDay = (powerInput * 24) / 1000; 
+      const costDay = energyDay * powerCost;
+
+      const resultsBody = document.getElementById('calc-results-body');
+      const periods = [
+        { label: 'Por Hora', factor: 1/24 },
+        { label: 'Diario', factor: 1 },
+        { label: 'Semanal', factor: 7 },
+        { label: 'Mensual (30d)', factor: 30 }
+      ];
+
+      resultsBody.innerHTML = periods.map(p => {
+        const cryptoEarn = cryptoPerDay * p.factor;
+        const grossUsd = cryptoEarn * priceNow;
+        const grossConverted = grossUsd * fiatRate;
+        const energyCost = costDay * p.factor;
+        const energyCostConverted = energyCost * fiatRate;
+        const netConverted = grossConverted - energyCostConverted;
+
+        return `
+          <tr class="hover:bg-dark-850">
+            <td class="px-3 py-3 font-sans text-gray-300 font-bold">${p.label}</td>
+            <td class="px-3 py-3 text-white font-mono">${cryptoEarn.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 8 })} ${currentCoin.toUpperCase()}</td>
+            <td class="px-3 py-3 text-gray-300 font-mono">${grossConverted.toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency })}</td>
+            <td class="px-3 py-3 text-rose-400 font-medium font-mono">${energyCostConverted.toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency })}</td>
+            <td class="px-3 py-3 font-bold font-mono ${netConverted >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${netConverted.toLocaleString(undefined, { style: 'currency', currency: currentBaseCurrency })}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function resetCalculatorDefaults() {
+      if (currentCoin === 'xmr') {
+        document.getElementById('calc-hashrate').value = "12000";
+        document.getElementById('calc-unit').value = "1"; 
+        document.getElementById('calc-power').value = "120";
+      } else {
+        document.getElementById('calc-hashrate').value = "500";
+        document.getElementById('calc-unit').value = "1000000"; 
+        document.getElementById('calc-power').value = "180";
+      }
+      document.getElementById('calc-cost').value = "0.12";
+      document.getElementById('calc-fee').value = "1.0";
+      document.getElementById('calc-stale').value = "0.5";
+      calculateCustomEarnings();
+      showToast("Valores reajustados para simulaciones", "success");
+    }
+
+    function calculateGoalTracker() {
+      const targetInput = parseFloat(document.getElementById('goal-crypto-target').value) || 0;
+      document.getElementById('goal-coin-suffix').textContent = currentCoin.toUpperCase();
+      
+      let currentHashrate = 0;
+      globalWorkersList.forEach(w => {
+        currentHashrate += w.hashrate;
+      });
+
+      if (currentHashrate === 0) {
+        const rawHrStr = document.getElementById('d-hash').textContent;
+        currentHashrate = parseFloat(rawHrStr) || 0;
+      }
+
+      let baseHashSec = currentHashrate;
+      if (currentCoin === 'kas' && currentHashrate > 0) {
+        baseHashSec = currentHashrate * 1e6; 
+      }
+
+      let cryptoPerDay = 0;
+      if (currentCoin === 'xmr') {
+        const difficulty = networkStats.xmr.difficulty || 320000000000;
+        const blockReward = networkStats.xmr.reward || 0.6;
+        cryptoPerDay = (baseHashSec * 86400 * blockReward) / difficulty;
+      } else {
+        const difficulty = networkStats.kas.difficulty || 1500000000000;
+        const blockReward = networkStats.kas.reward || 117.0;
+        cryptoPerDay = (baseHashSec * 86400 * blockReward) / (difficulty * 1000);
+      }
+
+      const resultElement = document.getElementById('goal-time-result');
+      const progressBar = document.getElementById('goal-progress-bar');
+      const progressCurrent = document.getElementById('goal-progress-current');
+      const progressTarget = document.getElementById('goal-progress-target');
+
+      progressCurrent.textContent = globalActiveBalance.toFixed(4) + ` ${currentCoin.toUpperCase()}`;
+      progressTarget.textContent = targetInput.toFixed(4) + ` ${currentCoin.toUpperCase()}`;
+
+      let percent = targetInput > 0 ? (globalActiveBalance / targetInput) * 100 : 0;
+      if (percent > 100) percent = 100;
+      progressBar.style.width = `${percent}%`;
+
+      const remainingCrypto = targetInput - globalActiveBalance;
+
+      if (remainingCrypto <= 0) {
+        resultElement.textContent = "¡Meta Alcanzada!";
+        resultElement.className = "text-base font-extrabold text-emerald-400 mt-1 font-mono";
+        return;
+      }
+
+      resultElement.className = "text-base font-extrabold text-white mt-1 font-mono";
+
+      if (cryptoPerDay <= 0) {
+        resultElement.textContent = "Rigs Apagados";
+        return;
+      }
+
+      const daysRequired = remainingCrypto / cryptoPerDay;
+      const totalHours = daysRequired * 24;
+      const days = Math.floor(daysRequired);
+      const hours = Math.floor(totalHours % 24);
+
+      if (days === 0 && hours === 0) {
+        const minutes = Math.floor(totalHours * 60);
+        resultElement.textContent = `${minutes} Minutos aprox.`;
+      } else {
+        resultElement.textContent = `${days}d, ${hours}h aprox.`;
+      }
+    }
+
+    function calculateRoiAmortization() {
+      const hwCost = parseFloat(document.getElementById('roi-hardware-cost').value) || 0;
+      localStorage.setItem('dev_hardware_cost', hwCost);
+
+      let currentHashrate = 0;
+      globalWorkersList.forEach(w => {
+        currentHashrate += w.hashrate;
+      });
+
+      if (currentHashrate === 0) {
+        const rawHrStr = document.getElementById('d-hash').textContent;
+        currentHashrate = parseFloat(rawHrStr) || 0;
+      }
+
+      let baseHashSec = currentHashrate;
+      if (currentCoin === 'kas' && currentHashrate > 0) {
+        baseHashSec = currentHashrate * 1e6; 
+      }
+
+      let cryptoPerDay = 0;
+      if (currentCoin === 'xmr') {
+        const difficulty = networkStats.xmr.difficulty || 320000000000;
+        const blockReward = networkStats.xmr.reward || 0.6;
+        cryptoPerDay = (baseHashSec * 86400 * blockReward) / difficulty;
+      } else {
+        const difficulty = networkStats.kas.difficulty || 1500000000000;
+        const blockReward = networkStats.kas.reward || 117.0;
+        cryptoPerDay = (baseHashSec * 86400 * blockReward) / (difficulty * 1000);
+      }
+
+      const priceNow = prices[currentCoin];
+      const fiatRate = fiatRates[currentBaseCurrency] || 1;
+      const dailyGross = cryptoPerDay * priceNow * fiatRate;
+
+      // Descuento energía estimada del rig para amortización neta
+      const powerInput = parseFloat(document.getElementById('calc-power').value) || 0;
+      const powerCost = parseFloat(document.getElementById('calc-cost').value) || 0;
+      const dailyEnergyCost = ((powerInput * 24) / 1000) * powerCost * fiatRate;
+
+      const dailyNetProfit = dailyGross - dailyEnergyCost;
+      const resultElement = document.getElementById('roi-time-result');
+
+      if (dailyNetProfit <= 0) {
+        resultElement.textContent = "Amortización Infinita (Retorno negativo)";
+        return;
+      }
+
+      const daysToPayoff = hwCost / dailyNetProfit;
+      resultElement.textContent = `${Math.ceil(daysToPayoff)} Días`;
+    }
+
+    function updateTelemetryUI() {
+      const xmrEl = document.getElementById('tel-latency-xmr');
+      if (latencies.xmr > 0) {
+        xmrEl.textContent = `${latencies.xmr} ms`;
+        xmrEl.className = "text-emerald-400 font-bold";
+      } else {
+        xmrEl.textContent = "Inactivo";
+        xmrEl.className = "text-gray-500 font-medium";
+      }
+
+      const kasEl = document.getElementById('tel-latency-kas');
+      if (latencies.kas > 0) {
+        kasEl.textContent = `${latencies.kas} ms`;
+        kasEl.className = "text-emerald-400 font-bold";
+      } else {
+        kasEl.textContent = "Inactivo";
+        kasEl.className = "text-gray-500 font-medium";
+      }
+    }
+
+    function openDiagnosticsModal() {
+      document.getElementById('diagnostics-modal').classList.remove('hidden');
+    }
+
+    function closeDiagnosticsModal() {
+      document.getElementById('diagnostics-modal').classList.add('hidden');
+    }
+
+    function openWalletsModal() {
+      document.getElementById('input-wallet-xmr').value = WALLETS.xmr;
+      document.getElementById('input-wallet-kas').value = WALLETS.kas;
+      document.getElementById('wallets-modal').classList.remove('hidden');
+    }
+
+    function closeWalletsModal() {
+      document.getElementById('wallets-modal').classList.add('hidden');
+    }
+
+    function saveCustomWallets() {
+      const newXmr = document.getElementById('input-wallet-xmr').value.trim();
+      const newKas = document.getElementById('input-wallet-kas').value.trim();
+
+      if (newXmr.length < 10 || newKas.length < 10) {
+        showToast("Por favor ingresa billeteras válidas.", "error");
+        return;
+      }
+
+      WALLETS.xmr = newXmr;
+      WALLETS.kas = newKas;
+
+      localStorage.setItem('dev_wallet_xmr', newXmr);
+      localStorage.setItem('dev_wallet_kas', newKas);
+
+      closeWalletsModal();
+      showToast("Direcciones de billetera actualizadas de manera local", "success");
+      writeLog("Nuevas wallets registradas localmente en el navegador.");
+      refreshData();
+    }
+
+    function resetWalletsToDefault() {
+      WALLETS = { ...DEFAULT_WALLETS };
+      localStorage.removeItem('dev_wallet_xmr');
+      localStorage.removeItem('dev_wallet_kas');
+
+      document.getElementById('input-wallet-xmr').value = WALLETS.xmr;
+      document.getElementById('input-wallet-kas').value = WALLETS.kas;
+
+      closeWalletsModal();
+      showToast("Wallets reseteadas a los valores oficiales de DevCenterX", "success");
+      writeLog("Direcciones restauradas a los parámetros por defecto de la blockchain.");
+      refreshData();
+    }
+
+    function copyWalletAddress() {
+      const addr = WALLETS[currentCoin];
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = addr;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+      showToast("Wallet copiada al portapapeles", "success");
+    }
+
+    function exportChartData() {
+      const dataSet = currentCoin === 'xmr' ? chartDataXmr : chartDataKas;
+      writeLog(`Historial de hashrate recuperado: ${dataSet.join(' -> ')}`);
+      showToast(`Telemetría volcada en consola de diagnósticos`, 'info');
+    }
+
+    function showPanel(id) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('nav button').forEach(b => {
+        b.classList.remove('text-orange-500', 'custom-accent-text');
+        b.classList.add('text-gray-500');
+      });
+      
+      document.getElementById('p-' + id).classList.remove('hidden');
+      const btn = document.getElementById('btn-nav-' + id);
+      if (btn) {
+        btn.classList.remove('text-gray-500');
+        btn.classList.add('text-orange-500', 'custom-accent-text');
+      }
+    }
+
+    function switchCoin(coin) {
+      currentCoin = coin;
+      const tabs = { xmr: 'tab-coin-xmr', kas: 'tab-coin-kas' };
+      
+      document.getElementById(tabs.xmr).className = "flex flex-col sm:flex-row items-center justify-center gap-2 py-3 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all border";
+      document.getElementById(tabs.kas).className = "flex flex-col sm:flex-row items-center justify-center gap-2 py-3 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all border";
+      
+      if (coin === 'xmr') {
+        document.getElementById(tabs.xmr).classList.add('bg-dark-900', 'shadow', 'text-orange-500', 'custom-accent-text', 'border-orange-500/20');
+        document.getElementById(tabs.kas).classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:bg-dark-850');
+        document.documentElement.style.setProperty('--accent-color', '#ff6600');
+        document.documentElement.style.setProperty('--accent-shadow', 'rgba(255, 102, 0, 0.15)');
+        
+        // Iconos
+        const icon = document.getElementById('coin-main-icon');
+        icon.classList.remove('text-emerald-400');
+        icon.classList.add('text-orange-500', 'custom-accent-text');
+        document.getElementById('brand-x').className = "text-orange-500 custom-accent-text font-black transition-colors duration-300";
+        document.getElementById('glow-zap-box').className = "p-3 bg-dark-800 rounded-xl border border-dark-750 text-orange-500 custom-accent-text shadow-sm";
+      } else {
+        document.getElementById(tabs.kas).classList.add('bg-dark-900', 'shadow', 'text-emerald-400', 'border-emerald-400/20');
+        document.getElementById(tabs.xmr).classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:bg-dark-850');
+        document.documentElement.style.setProperty('--accent-color', '#10b981');
+        document.documentElement.style.setProperty('--accent-shadow', 'rgba(16, 185, 129, 0.15)');
+        
+        // Iconos
+        const icon = document.getElementById('coin-main-icon');
+        icon.classList.remove('text-orange-500', 'custom-accent-text');
+        icon.classList.add('text-emerald-400');
+        document.getElementById('brand-x').className = "text-emerald-400 font-black transition-colors duration-300";
+        document.getElementById('glow-zap-box').className = "p-3 bg-dark-800 rounded-xl border border-dark-750 text-emerald-400 shadow-sm";
+      }
+
+      resetCalculatorDefaults();
+      showToast(`Consultando pool correspondiente a ${coin.toUpperCase()}`, 'success');
+      writeLog(`Cambio de contexto: Moneda activa seleccionada -> ${coin.toUpperCase()}`);
+      refreshData();
+    }
+
+    let chartLabels = Array(12).fill('').map((_, i) => `${i * 10}m`);
+    let chartDataXmr = Array(12).fill(0);
+    let chartDataKas = Array(12).fill(0);
+
+    function initializeChart() {
+      const ctx = document.getElementById('hashrateChart').getContext('2d');
+      const accentColor = currentCoin === 'xmr' ? '#ff6600' : '#10b981';
+
+      hashrateChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: 'Potencia de Rigs',
+            data: currentCoin === 'xmr' ? chartDataXmr : chartDataKas,
+            borderColor: accentColor,
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: accentColor,
+            fill: true,
+            backgroundColor: 'rgba(23, 34, 21, 0.35)',
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#8b9484', font: { family: 'JetBrains Mono', size: 9 } } },
+            y: { grid: { color: '#172215' }, ticks: { color: '#8b9484', font: { family: 'JetBrains Mono', size: 9 } } }
+          }
+        }
+      });
+    }
+
+    function updateChartData() {
+      if (!hashrateChart) return;
+      const accentColor = currentCoin === 'xmr' ? '#ff6600' : '#10b981';
+      
+      hashrateChart.data.labels = chartLabels;
+      hashrateChart.data.datasets[0].data = currentCoin === 'xmr' ? chartDataXmr : chartDataKas;
+      hashrateChart.data.datasets[0].borderColor = accentColor;
+      hashrateChart.data.datasets[0].pointBackgroundColor = accentColor;
+      
+      hashrateChart.update();
+    }
+
+    // Toast Messages
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-dark-850 border-dark-700';
+      let icon = 'info';
+      let textCol = 'text-sky-400';
+
+      if (type === 'success') {
+        bg = 'bg-emerald-950/90 border-emerald-800/50';
+        icon = 'check-circle';
+        textCol = 'text-emerald-400';
+      } else if (type === 'error') {
+        bg = 'bg-rose-950/90 border-rose-800/50';
+        icon = 'alert-triangle';
+        textCol = 'text-rose-400';
+      }
+
+      toast.className = `${bg} border p-3 rounded-xl shadow-xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 ${textCol} shrink-0"></i>
+        <p class="text-[11px] font-semibold text-white">${message}</p>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

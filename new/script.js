@@ -264,9 +264,13 @@ window.nextSetupStep = function() {
                     btn.textContent = 'CONSULTAR DATOS REALES';
                     lastDerivedKeys = { address, seed: null, spendKey: null, viewKey };
                     pendingManualKeys = null;
-                    showToast(`Saldo real encontrado: ${data.balanceXmr.toFixed(6)} XMR`);
+                    const label = data.source === 'nanopool-pending'
+                        ? `Balance pendiente en Nanopool: ${data.balanceXmr.toFixed(6)} XMR (mymonero está discontinuado, así que esto viene del pool, no de la blockchain)`
+                        : `Saldo real (on-chain) encontrado: ${data.balanceXmr.toFixed(6)} XMR`;
+                    showToast(label);
                     setupStep = 3;
                     updateWizardStepUI();
+
                 })
                 .catch((err) => {
                     btn.disabled = false;

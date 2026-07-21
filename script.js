@@ -309,8 +309,18 @@
     return data;
   }
 
+  async function getNanopoolPendingBalance(address) {
+    const res = await fetch(`https://api.nanopool.org/v1/xmr/balance/${address}`);
+    if (!res.ok) throw new Error(`Nanopool respondió ${res.status}`);
+    const json = await res.json();
+    if (!json || json.status !== true) {
+      throw new Error('Nanopool no tiene datos para esta dirección (¿nunca ha minado a este pool?).');
+    }
+    return parseFloat(json.data) || 0;
+  }
+
   async function getRealBalanceViewOnly({ address, viewKey, serverUrl }) {
-    if (!address || !viewKey) throw new Error('Se requieren dirección pública y clave de vista.');
+    if (!address) throw new Error('Se requiere la dirección pública.');
 
     const atomicToXmr = (v) => Number(BigInt(v || 0)) / 1e12;
     const toResult = (data, serverUsed) => {
@@ -322,42 +332,51 @@
         unlockedXmr: received - sent - locked,
         txCount: (data.spent_outputs || []).length,
         serverUsed,
+        source: 'onchain',
         raw: data,
       };
     };
 
-    // 1) Intento vía tu propia función serverless (sin CORS). Si el
-    //    proyecto no está desplegado con backend, esto falla rápido y
-    //    seguimos al intento directo.
-    try {
-      const data = await tryOwnProxy(address, viewKey);
-      console.info('[MoneroWalletService] Consulta exitosa vía /api/monero-balance.');
-      return toResult(data, '/api/monero-balance (proxy propio)');
-    } catch (proxyErr) {
-      console.warn('[MoneroWalletService] Proxy propio no disponible o falló:', proxyErr.message);
-    }
-
-    // 2) Fallback: llamada directa (solo funcionará si el servidor
-    //    permite CORS desde tu origen, algo que mymonero.com no hace).
-    const servers = serverUrl ? [serverUrl] : ['https://api.mymonero.com'];
-    const attempts = [];
-    for (const s of servers) {
+    if (viewKey) {
       try {
-        const data = await tryOneServer(s, address, viewKey);
-        console.info(`[MoneroWalletService] Consulta directa exitosa contra ${s}.`);
-        return toResult(data, s);
-      } catch (err) {
-        attempts.push(`${s}: ${err.message}`);
+        const data = await tryOwnProxy(address, viewKey);
+        console.info('[MoneroWalletService] Consulta exitosa vía /api/monero-balance.');
+        return toResult(data, '/api/monero-balance (proxy propio)');
+      } catch (proxyErr) {
+        console.warn('[MoneroWalletService] Proxy propio no disponible o falló:', proxyErr.message);
       }
+
+      const servers = serverUrl ? [serverUrl] : ['https://api.mymonero.com'];
+      for (const s of servers) {
+        try {
+          const data = await tryOneServer(s, address, viewKey);
+          console.info(`[MoneroWalletService] Consulta directa exitosa contra ${s}.`);
+          return toResult(data, s);
+        } catch (err) {
+          console.warn(`[MoneroWalletService] ${s} falló: ${err.message}`);
+        }
+      }
+      console.warn('[MoneroWalletService] mymonero (saldo on-chain) no disponible: el servicio fue discontinuado el 6 de enero de 2026. Probando Nanopool como respaldo (balance de minería pendiente, no on-chain).');
     }
 
-    const detail = attempts.join(' | ');
-    console.error('[MoneroWalletService] Todos los intentos fallaron:', detail);
-    throw new Error(
-      `No se pudo verificar el saldo. Despliega este proyecto con la función ` +
-      `/api/monero-balance.js (ej. en Vercel) para evitar el bloqueo de CORS. ` +
-      `Detalle: ${detail}`
-    );
+    try {
+      const balance = await getNanopoolPendingBalance(address);
+      return {
+        balanceXmr: balance,
+        unlockedXmr: balance,
+        txCount: 0,
+        serverUsed: 'https://api.nanopool.org (balance de minería pendiente)',
+        source: 'nanopool-pending',
+        raw: null,
+      };
+    } catch (nanoErr) {
+      console.error('[MoneroWalletService] Nanopool tampoco respondió:', nanoErr.message);
+      throw new Error(
+        `No se pudo verificar ningún saldo. El servicio público de MyMonero fue ` +
+        `discontinuado (6 de enero de 2026) y Nanopool no tiene datos para esta ` +
+        `dirección. Detalle: ${nanoErr.message}`
+      );
+    }
   }
 
   global.MoneroWalletService = {
