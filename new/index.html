@@ -90,14 +90,27 @@
           <div class="setup-group">
             <div class="setup-field">
               <div class="security-note">
-                🔒 Esta semilla se genera 100% en tu dispositivo con criptografía real de Monero (monero-ts / wallet2). Nunca viaja a ningún servidor. Escríbela en papel — es la única forma de recuperar tu wallet.
+                <svg class="security-note-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+                <span>Esta semilla se genera 100% en tu dispositivo con criptografía real de Monero. Nunca viaja a ningún servidor. Escríbela en papel — es la única forma de recuperar tu wallet.</span>
               </div>
-              <label for="setupWalletSeed">SEMILLA MONERO (25 PALABRAS) — GENERADA LOCALMENTE</label>
-              <textarea id="setupWalletSeed" class="setup-input" rows="4" readonly style="resize: none; font-family: 'JetBrains Mono', monospace; font-size: 13px;" placeholder="Generando semilla real..."></textarea>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                <span id="mnemonicWordCount" style="font-size: 11px; color: var(--accent); font-weight: 700;">Palabras: 0 / 25</span>
-                <button type="button" class="link-btn" onclick="regenerateNewSeed()">↻ Generar otra</button>
+
+              <div class="seed-panel-header">
+                <label class="seed-panel-title">Semilla Monero</label>
+                <span id="mnemonicWordCount" class="seed-word-count">0 / 25</span>
               </div>
+
+              <div id="seedWordsGrid" class="seed-words-grid" aria-live="polite">
+                <div class="seed-words-loading">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="20"/></svg>
+                  <span>Generando semilla real…</span>
+                </div>
+              </div>
+              <textarea id="setupWalletSeed" style="display:none;"></textarea>
+
+              <button type="button" class="seed-regenerate-btn" onclick="regenerateNewSeed()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Generar otra
+              </button>
             </div>
           </div>
           <button class="continue-btn" onclick="nextSetupStep()" style="margin-top: auto;">OBTENER LAS CLAVES</button>
@@ -108,7 +121,8 @@
           <div class="setup-group">
             <div class="setup-field">
               <div class="security-note security-note-safe">
-                ✅ Modo seguro "solo lectura": únicamente pedimos tu dirección pública y tu CLAVE DE VISTA. Con estos dos datos la app puede leer tu saldo real, pero es matemáticamente imposible mover o gastar tus fondos. Nunca compartas tu semilla ni tu clave de gasto con ninguna app.
+                <svg class="security-note-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                <span>Modo seguro "solo lectura": únicamente pedimos tu dirección pública y tu clave de vista. Con estos dos datos la app puede leer tu saldo real, pero es matemáticamente imposible mover o gastar tus fondos. Nunca compartas tu semilla ni tu clave de gasto con ninguna app.</span>
               </div>
               <label for="viewOnlyAddress">DIRECCIÓN PÚBLICA</label>
               <input type="text" id="viewOnlyAddress" class="setup-input" style="font-family: 'JetBrains Mono', monospace; font-size: 12px;" placeholder="4... (tu dirección Monero pública)">

@@ -135,10 +135,35 @@ function activateTab(tab) {
     document.querySelector('.global-stats').style.display = (tab === 'mining') ? 'flex' : 'none';
 }
 
-function showToast(msg) {
+function showToast(msg, opts) {
     elements.infoToast.textContent = msg;
     elements.infoToast.classList.add('show');
     setTimeout(() => elements.infoToast.classList.remove('show'), 2500);
+
+    // Si el mensaje es un error (o se pide explícitamente), lo copiamos
+    // automáticamente al portapapeles para que sea fácil pegarlo y reportarlo.
+    const isError = (opts && opts.isError) || /error|no se pudo|falló|inválid/i.test(msg);
+    if (isError && navigator.clipboard) {
+        navigator.clipboard.writeText(msg).catch(() => {});
+        elements.infoToast.title = 'Copiado al portapapeles';
+    }
+}
+
+function renderSeedWordsGrid(seedPhrase) {
+    const grid = document.getElementById('seedWordsGrid');
+    const words = seedPhrase.trim().split(/\s+/).filter(Boolean);
+    grid.innerHTML = words.map((w, i) => `
+        <div class="seed-word-chip"><span class="seed-word-idx">${i + 1}</span>${w}</div>
+    `).join('');
+}
+
+function showSeedWordsLoading() {
+    const grid = document.getElementById('seedWordsGrid');
+    grid.innerHTML = `
+        <div class="seed-words-loading">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="20"/></svg>
+            <span>Generando semilla real…</span>
+        </div>`;
 }
 
 window.showSetupFlow = function(flow) {
@@ -165,30 +190,33 @@ window.showSetupFlow = function(flow) {
         createStep.style.display = 'flex';
         viewOnlyStep.style.display = 'none';
         elements.setupWalletSeed.value = "";
-        elements.setupWalletSeed.placeholder = "Generando semilla real con criptografía Monero...";
-        document.getElementById('mnemonicWordCount').textContent = 'Palabras: 0 / 25';
+        showSeedWordsLoading();
+        document.getElementById('mnemonicWordCount').textContent = '0 / 25';
         // Generamos la wallet real ya en este paso para tenerla lista al llegar al paso 2.
         window.MoneroWalletService.createRealWallet()
             .then((keys) => {
                 lastDerivedKeys = keys;
                 elements.setupWalletSeed.value = keys.seed;
+                renderSeedWordsGrid(keys.seed);
                 validateMnemonicInput();
             })
             .catch((err) => {
                 console.error('[new/script.js] Error generando wallet real:', err);
                 showToast('Error generando wallet real: ' + err.message + ' (ver consola F12)');
-                elements.setupWalletSeed.placeholder = "Error generando semilla. Intenta de nuevo.";
+                document.getElementById('seedWordsGrid').innerHTML =
+                    '<div class="seed-words-loading">Error generando semilla. Intenta de nuevo.</div>';
             });
     }
 };
 
 window.regenerateNewSeed = function() {
     elements.setupWalletSeed.value = "";
-    elements.setupWalletSeed.placeholder = "Generando semilla real con criptografía Monero...";
+    showSeedWordsLoading();
     window.MoneroWalletService.createRealWallet()
         .then((keys) => {
             lastDerivedKeys = keys;
             elements.setupWalletSeed.value = keys.seed;
+            renderSeedWordsGrid(keys.seed);
             validateMnemonicInput();
         })
         .catch((err) => {
@@ -205,7 +233,7 @@ window.hideSetupFlow = function() {
 window.validateMnemonicInput = function() {
     const text = elements.setupWalletSeed.value.trim();
     const words = text.split(/\s+/).filter(w => w.length > 0);
-    document.getElementById('mnemonicWordCount').textContent = `Palabras: ${words.length} / 25`;
+    document.getElementById('mnemonicWordCount').textContent = `${words.length} / 25`;
 };
 
 window.nextSetupStep = function() {
