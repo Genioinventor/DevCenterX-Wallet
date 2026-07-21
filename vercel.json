@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/monero-balance.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

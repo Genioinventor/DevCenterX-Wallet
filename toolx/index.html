@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToolX – DevCenterX Crypto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+    <div>
+        <div class="header-title">Tool<span>X</span></div>
+        <div class="header-sub">Herramientas y utilidades</div>
+    </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+
+    <!-- Featured: Modo Finanzas -->
+    <div class="toolx-featured-card" onclick="window.location.href='../index.html'">
+        <div class="toolx-nuevo-badge">NUEVO</div>
+        <div class="toolx-featured-icon">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#FF8C1A" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div style="font-size: 20px; font-weight: 800; color: #FF8C1A; margin: 10px 0 4px;">Modo Finanzas</div>
+        <div style="font-size: 13px; color: #94a3b8;">Minería Monero y Mercados</div>
+    </div>
+
+    <!-- Grid de acciones rápidas -->
+    <div class="section-label">Acciones</div>
+    <div class="toolx-grid">
+        <div class="toolx-card" onclick="showToast('Seguridad disponible en la app principal')">
+            <div class="toolx-card-icon" style="background: rgba(99,102,241,0.15);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#818cf8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="toolx-card-title">Seguridad</div>
+            <div class="toolx-card-sub">Ajustes de cuenta</div>
+        </div>
+
+            <div class="toolx-card" onclick="openAccount()">
+            <div class="toolx-card-icon" style="background: rgba(99,102,241,0.15);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#818cf8" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="toolx-card-title">Cuenta</div>
+            <div class="toolx-card-sub">Gestiona semilla, dirección y claves</div>
+        </div>
+
+        <div class="toolx-card" onclick="showToast('Descuentos: próximamente')">
+            <div class="toolx-card-icon" style="background: rgba(255,140,26,0.15);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FF8C1A" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            </div>
+            <div class="toolx-card-title">Descuentos</div>
+            <div class="toolx-card-sub">Calcula rebajas</div>
+        </div>
+
+        <div class="toolx-card" onclick="showToast('Propinas: próximamente')">
+            <div class="toolx-card-icon" style="background: rgba(236,72,153,0.15);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ec4899" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            </div>
+            <div class="toolx-card-title">Propinas</div>
+            <div class="toolx-card-sub">Cuentas en grupo</div>
+        </div>
+    </div>
+
+    <!-- Accesos directos -->
+    <div class="toolx-settings-row" onclick="openCartera()">
+        <div class="toolx-settings-icon" style="background: rgba(255,140,26,0.12);">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FF8C1A" stroke-width="2"><path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><circle cx="18" cy="12" r="2"/></svg>
+        </div>
+        <div>
+            <div style="font-size: 15px; font-weight: 700; color: #f1f5f9;">Carteras</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Crear o restaurar billetera Monero</div>
+        </div>
+        <svg style="margin-left: auto; color: #475569;" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <div id="active-wallet-info" style="padding:10px 16px 0 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:var(--dim);">
+        <div id="aw-name" style="font-weight:700;color:var(--text);"></div>
+        <div id="aw-addr" style="margin-top:4px;color:#94a3b8;">Dirección: —</div>
+        <div style="margin-top:8px;">
+            <button class="btn-sm" onclick="openWalletOptions(event)">Más opciones</button>
+        </div>
+    </div>
+
+        <div class="toolx-settings-row" onclick="openSecurity()">
+            <div class="toolx-settings-icon" style="background: rgba(99,102,241,0.08);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#818cf8" stroke-width="2"><path d="M12 1v4"/><rect x="4" y="7" width="16" height="14" rx="2"/></svg>
+            </div>
+            <div>
+                <div style="font-size: 15px; font-weight: 700; color: #f1f5f9;">Seguridad</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">PIN y auto-detención por temperatura</div>
+            </div>
+            <svg style="margin-left: auto; color: #475569;" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+    
+
+    <!-- (Semilla removido por petición) -->
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Panel Calculadora -->
+<div class="panel-overlay" id="panel-calc">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Calculadora XMR</div>
+        <div class="panel-sub" id="calc-rate">Obteniendo precio en vivo…</div>
+
+        <div class="field">
+            <label>XMR</label>
+            <input type="number" id="calc-xmr" placeholder="0.000000" step="0.000001" oninput="calcConvert()">
+        </div>
+        <div class="field">
+            <label>USD $</label>
+            <input type="number" id="calc-usd" placeholder="0.00" oninput="calcFromUSD()">
+        </div>
+        <div class="field">
+            <label>MXN $</label>
+            <input type="number" id="calc-mxn" placeholder="0.00" oninput="calcFromMXN()">
+        </div>
+
+        <button class="btn btn-ghost" onclick="closePanel('panel-calc')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Panel QR -->
+<div class="panel-overlay" id="panel-qr">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Código QR</div>
+        <div class="panel-sub">Genera un código QR para cualquier dirección o texto.</div>
+        <div class="field">
+            <label>Texto o dirección</label>
+            <input type="text" id="qr-input" placeholder="4AbC...  o cualquier texto" oninput="renderQR()">
+        </div>
+        <canvas id="qr-canvas" width="220" height="220"></canvas>
+        <br><br>
+        <button class="btn btn-primary" onclick="downloadQR()">Descargar QR</button>
+        <button class="btn btn-ghost" onclick="closePanel('panel-qr')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Panel Verificar Dirección -->
+<div class="panel-overlay" id="panel-addr">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Verificar Dirección</div>
+        <div class="panel-sub">Detecta si una dirección es válida y qué tipo de criptomoneda es.</div>
+
+        <div class="field">
+            <label>Dirección</label>
+            <input type="text" id="addr-input" placeholder="4...  /  1...  /  0x...">
+        </div>
+        <button class="btn btn-primary" onclick="checkAddress()" style="margin-bottom:16px;">Verificar</button>
+        <div class="result-box" id="addr-result" style="min-height:60px;color:var(--dim);font-family:'Inter',sans-serif;font-size:13px;">
+            El resultado aparecerá aquí…
+        </div>
+        <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePanel('panel-addr')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Panel Hash -->
+<div class="panel-overlay" id="panel-hash">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Generador de Hash</div>
+        <div class="panel-sub">Genera hashes criptográficos de cualquier texto.</div>
+
+        <div class="field">
+            <label>Texto de entrada</label>
+            <textarea id="hash-input" placeholder="Escribe o pega el texto a hashear…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="generateHash()" style="margin-bottom:16px;">Generar Hashes</button>
+
+        <div class="hash-chips" id="hash-results"></div>
+
+        <div id="hash-copy-btns" style="display:none;gap:8px;flex-wrap:wrap;margin-top:14px;">
+            <button class="btn-sm btn-sm-accent" onclick="copyText(document.getElementById('h-256')?.textContent,'SHA-256')">Copiar SHA-256</button>
+            <button class="btn-sm btn-sm-accent" onclick="copyText(document.getElementById('h-512')?.textContent,'SHA-512')">Copiar SHA-512</button>
+        </div>
+
+        <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePanel('panel-hash')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Panel Conversor Base -->
+<div class="panel-overlay" id="panel-base">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Conversor de Base</div>
+        <div class="panel-sub">Convierte números entre decimal, hexadecimal, binario y octal.</div>
+
+        <div style="margin-bottom:16px;">
+            <div style="font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Base de entrada</div>
+            <div class="tag-row">
+                <div class="tag active" data-base="dec">Decimal</div>
+                <div class="tag" data-base="hex">Hexadecimal</div>
+                <div class="tag" data-base="bin">Binario</div>
+                <div class="tag" data-base="oct">Octal</div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Valor</label>
+            <input type="text" id="base-input" placeholder="Ingresa el número…" oninput="convertBase()">
+        </div>
+
+        <div class="hash-chips" id="base-results"></div>
+
+        <button class="btn btn-ghost" style="margin-top:18px;" onclick="closePanel('panel-base')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Panel Contador Semilla -->
+<!-- panel-seed removed -->
+
+<!-- Panel Cuenta -->
+<div class="panel-overlay" id="panel-account">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Cuenta</div>
+        <div class="panel-sub">Gestiona tu semilla, dirección pública y claves privadas.</div>
+
+        <div class="field">
+            <label>Frase semilla</label>
+            <textarea id="account-seed" placeholder="Pega o genera tu frase semilla…" rows="4"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-sm" onclick="toggleReveal('account-seed')">Mostrar / Ocultar</button>
+                <button class="btn-sm" onclick="copyText(document.getElementById('account-seed').value,'Semilla')">Copiar Semilla</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>DIRECCIÓN PÚBLICA (Wallet Address)</label>
+            <input type="text" id="account-address" placeholder="Dirección pública" readonly>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-sm" onclick="copyText(document.getElementById('account-address').value,'Dirección')">Copiar Dirección</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>CLAVE DE GASTO (Private Spend Key)</label>
+            <input type="text" id="account-spend" placeholder="Clave de gasto" readonly>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-sm" onclick="toggleReveal('account-spend')">Mostrar / Ocultar</button>
+                <button class="btn-sm" onclick="copyText(document.getElementById('account-spend').value,'Clave de gasto')">Copiar Clave de Gasto</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>CLAVE DE VISTA (Private View Key)</label>
+            <input type="text" id="account-view" placeholder="Clave de vista" readonly>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-sm" onclick="toggleReveal('account-view')">Mostrar / Ocultar</button>
+                <button class="btn-sm" onclick="copyText(document.getElementById('account-view').value,'Clave de vista')">Copiar Clave de Vista</button>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px;">
+            <button class="btn btn-primary" onclick="saveAccount()">Guardar (local)</button>
+            <button class="btn btn-sm" onclick="closeSession()">Cerrar sesión</button>
+            <button class="btn btn-ghost" onclick="closePanel('panel-account')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Panel Seguridad -->
+<div class="panel-overlay" id="panel-security">
+    <div class="panel">
+        <div class="panel-handle"></div>
+        <div class="panel-title">Seguridad</div>
+        <div class="panel-sub">Ajustes de acceso y auto-detención de minería por temperatura.</div>
+
+        <div class="field">
+            <label>PIN de acceso (4-8 dígitos)</label>
+            <input type="password" id="security-pin" placeholder="Ingresa PIN"> 
+        </div>
+
+        <div class="field">
+            <label>Auto-detención si temperatura ≥ <span id="temp-val">40</span> °C</label>
+            <input type="range" id="security-temp" min="10" max="60" value="40" oninput="document.getElementById('temp-val').textContent=this.value">
+        </div>
+
+        <div class="field">
+            <label>Enlace de destino para Cartera</label>
+            <input type="text" id="cartera-target" placeholder="../cartera/index.html">
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-sm" onclick="copyText(document.getElementById('cartera-target').value,'Enlace Cartera')">Copiar enlace</button>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px;">
+            <button class="btn btn-primary" onclick="saveSecurity()">Guardar</button>
+            <button class="btn btn-ghost" onclick="closePanel('panel-security')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <button class="nav-btn" onclick="window.location.href='../index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        <span>Minar</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='../cartera/index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Cartera</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='../devices/index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+        <span>Dispositivos</span>
+    </button>
+    <button class="nav-btn active">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>ToolX</span>
+    </button>
+</nav>
+
+<script src="script.js"></script>
+</body>
+</html>

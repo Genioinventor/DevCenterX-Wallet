@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dispositivos – DevCenterX Crypto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+    <div>
+        <div class="header-title">Mis <span>Dispositivos</span></div>
+        <div class="header-sub">Workers en Nanopool</div>
+    </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card active">
+            <div class="stat-label">ACTIVOS</div>
+            <div class="stat-value" id="activeCount">—</div>
+        </div>
+        <div class="stat-card inactive">
+            <div class="stat-label">INACTIVOS</div>
+            <div class="stat-value" id="inactiveCount">—</div>
+        </div>
+    </div>
+
+    <!-- Devices list -->
+    <div id="devicesList">
+        <div class="state-msg">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>Cargando dispositivos…</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ── DETAIL PANEL ── -->
+<div class="detail-panel" id="detailPanel">
+
+    <div class="detail-header">
+        <button class="back-btn" onclick="closeDetail()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <div class="detail-title" id="detailTitle">Consola del Dispositivo</div>
+        <div style="width:40px;"></div>
+    </div>
+
+    <div class="detail-body">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="status-dot" id="statusDot" style="background:var(--success); box-shadow:0 0 10px var(--success);"></span>
+                <span id="statusText" style="font-size:13px; font-weight:700;">MINANDO ACTIVAMENTE</span>
+            </div>
+            <span id="statusUptime" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim);">UPTIME: 14h 32m 05s</span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="telemetry" onclick="switchTab('telemetry')">TELEMETRÍA</button>
+            <button class="tab-btn" data-tab="hardware" onclick="switchTab('hardware')">HARDWARE</button>
+            <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">LOGS</button>
+        </div>
+
+        <!-- TELEMETRY -->
+        <div id="section-telemetry" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-label">HASHRATE ACTUAL</div>
+                    <div class="metric-value" id="metricHashrate" style="color:var(--cyan);">— H/s</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">PROMEDIO (6H)</div>
+                    <div class="metric-value" id="metricAvgHashrate" style="color:#8b5cf6;">— H/s</div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-card-title">DESEMPEÑO HISTÓRICO DE COMPUTACIÓN
+                    <span style="float:right; color:var(--success); font-weight:700;">ESTABLE</span>
+                </div>
+                <div class="chart-wrap">
+                    <svg viewBox="0 0 300 100" fill="none">
+                        <path d="M 0,75 Q 50,30 100,60 T 200,40 T 300,30" stroke="#00D1FF" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 0,75 Q 50,30 100,60 T 200,40 T 300,30 L 300,100 L 0,100 Z" fill="rgba(0,209,255,0.05)"/>
+                        <circle cx="100" cy="60" r="4" fill="#00D1FF"/>
+                        <circle cx="200" cy="40" r="4" fill="#00D1FF"/>
+                        <circle cx="300" cy="30" r="4" fill="#00D1FF"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-card-title">ESTADÍSTICAS DE TRABAJO (SHARES)</div>
+                <div class="shares-grid">
+                    <div class="share-item">
+                        <div class="share-lbl">Aceptados</div>
+                        <div class="share-val" id="sharesAcc" style="color:var(--success);">—</div>
+                    </div>
+                    <div class="share-item">
+                        <div class="share-lbl">Rechazados</div>
+                        <div class="share-val" id="sharesRej" style="color:var(--error);">—</div>
+                    </div>
+                    <div class="share-item">
+                        <div class="share-lbl">Calificación</div>
+                        <div class="share-val" id="sharesRating" style="color:var(--accent);">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HARDWARE -->
+        <div id="section-hardware" style="display:none; flex-direction:column; gap:14px;">
+            <div class="panel-card">
+                <div class="hw-row"><span class="hw-key">Modelo de Procesador</span><span class="hw-val" id="hwCpu">—</span></div>
+                <div class="hw-row"><span class="hw-key">Arquitectura del Núcleo</span><span class="hw-val" style="font-family:'JetBrains Mono',monospace; color:var(--text);">aarch64 (64-bit)</span></div>
+                <div class="hw-row"><span class="hw-key">Asignación de Hilos</span><span class="hw-val" id="hwThreads" style="color:var(--accent);">—</span></div>
+                <div class="hw-row"><span class="hw-key">Temperatura del Silicio</span><span class="hw-val" id="hwTemp" style="color:var(--error);">—</span></div>
+                <div class="hw-row"><span class="hw-key">Memoria Caché L1/L2</span><span class="hw-val">4 MB L3 Cache</span></div>
+                <div class="hw-row"><span class="hw-key">Dirección IP Local</span><span class="hw-val" id="hwIp" style="font-family:'JetBrains Mono',monospace;">—</span></div>
+                <div class="hw-row"><span class="hw-key">Puerto / Algoritmo</span><span class="hw-val" style="font-family:'JetBrains Mono',monospace; color:var(--cyan);">RandomX (rx/0)</span></div>
+            </div>
+        </div>
+
+        <!-- LOGS -->
+        <div id="section-logs" style="display:none; flex-direction:column; gap:14px;">
+            <div class="log-terminal" id="logTerminal"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row">
+            <button class="action-btn danger" onclick="triggerAction('reboot')">REINICIAR SERVICIO</button>
+            <button class="action-btn info"   onclick="triggerAction('ping')">PRUEBA DE PING</button>
+        </div>
+
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <button class="nav-btn" onclick="window.location.href='../index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        <span>Minar</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='../cartera/index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Cartera</span>
+    </button>
+    <button class="nav-btn active">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+        <span>Dispositivos</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='../toolx/index.html'">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>ToolX</span>
+    </button>
+</nav>
+
+<script src="script.js"></script>
+</body>
+</html>
