@@ -24,68 +24,74 @@ const UPSTREAM_SERVERS = [
 ];
 
 module.exports = async function handler(req, res) {
-  // Cabeceras CORS para que TU frontend (mismo dominio de Vercel u otro
-  // que definas) pueda llamar a esta función sin problema.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Método no permitido, usa POST.' });
-    return;
-  }
-
-  const { address, view_key: viewKey } = req.body || {};
-
-  if (!address || !viewKey) {
-    res.status(400).json({ error: 'Faltan "address" y/o "view_key" en el cuerpo de la petición.' });
-    return;
-  }
-  // Rechazo explícito por seguridad: esta función jamás debe procesar
-  // una semilla o clave de gasto, aunque alguien intente enviarla.
-  if (req.body.seed || req.body.spend_key || req.body.spendKey) {
-    res.status(400).json({ error: 'Esta función es solo view-only: no aceptes ni envíes semilla ni clave de gasto.' });
-    return;
-  }
-
-  const attempts = [];
-  for (const upstream of UPSTREAM_SERVERS) {
-    try {
-      const upstreamRes = await fetch(`${upstream}/get_address_info`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, view_key: viewKey }),
-      });
-
-      const text = await upstreamRes.text();
-
-      if (!upstreamRes.ok) {
-        attempts.push(`${upstream}: HTTP ${upstreamRes.status} — ${text.slice(0, 300)}`);
-        continue;
-      }
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        attempts.push(`${upstream}: respuesta no-JSON — ${text.slice(0, 300)}`);
-        continue;
-      }
-
-      res.status(200).json({ ok: true, server: upstream, data });
+  try {
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
       return;
-    } catch (err) {
-      attempts.push(`${upstream}: ${err.name} — ${err.message}`);
     }
-  }
 
-  res.status(502).json({
-    error: 'No se pudo consultar ningún servidor de saldo real.',
-    attempts,
-  });
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Método no permitido, usa POST.' });
+      return;
+    }
+
+    const { address, view_key: viewKey } = req.body || {};
+
+    if (!address || !viewKey) {
+      res.status(400).json({ error: 'Faltan "address" y/o "view_key" en el cuerpo de la petición.' });
+      return;
+    }
+    if (req.body.seed || req.body.spend_key || req.body.spendKey) {
+      res.status(400).json({ error: 'Esta función es solo view-only: no aceptes ni envíes semilla ni clave de gasto.' });
+      return;
+    }
+
+    const attempts = [];
+    for (const upstream of UPSTREAM_SERVERS) {
+      try {
+        const upstreamRes = await fetch(`${upstream}/get_address_info`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, view_key: viewKey }),
+        });
+
+        const text = await upstreamRes.text();
+
+        if (!upstreamRes.ok) {
+          attempts.push(`${upstream}: HTTP ${upstreamRes.status} — ${text.slice(0, 300)}`);
+          continue;
+        }
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          attempts.push(`${upstream}: respuesta no-JSON — ${text.slice(0, 300)}`);
+          continue;
+        }
+
+        res.status(200).json({ ok: true, server: upstream, data });
+        return;
+      } catch (err) {
+        attempts.push(`${upstream}: ${err.name} — ${err.message}`);
+      }
+    }
+
+    // 200 con ok:false (no 502) para que el detalle SIEMPRE llegue al
+    // frontend en JSON legible, en vez de un "Bad Gateway" mudo.
+    res.status(200).json({
+      ok: false,
+      error: 'No se pudo consultar ningún servidor de saldo real.',
+      attempts,
+    });
+  } catch (fatalErr) {
+    res.status(200).json({
+      ok: false,
+      error: `Excepción no controlada en la función: ${fatalErr.name} — ${fatalErr.message}`,
+    });
+  }
 };

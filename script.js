@@ -256,10 +256,14 @@
     const text = await res.text();
     let payload;
     try { payload = JSON.parse(text); } catch (e) {
-      throw new Error(`/api/monero-balance no devolvió JSON (¿no está desplegado este endpoint?): ${text.slice(0, 200)}`);
+      throw new Error(`/api/monero-balance no devolvió JSON (¿no está desplegado este endpoint?): ${text.slice(0, 300)}`);
     }
-    if (!res.ok || !payload.ok) {
-      throw new Error(payload.error || `/api/monero-balance respondió ${res.status}`);
+    if (!payload.ok) {
+      // Antes esto se perdía y solo se veía "502 Bad Gateway" sin detalle.
+      // Ahora la función SIEMPRE responde 200 con {ok:false, error, attempts}
+      // para que el mensaje real (qué servidor falló y por qué) llegue hasta acá.
+      const detail = payload.attempts ? ` — intentos: ${payload.attempts.join(' | ')}` : '';
+      throw new Error((payload.error || `/api/monero-balance respondió ${res.status}`) + detail);
     }
     return payload.data;
   }
