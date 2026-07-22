@@ -71,6 +71,7 @@ const elements = {
     modalDeviceSharesRej: document.getElementById('modalDeviceSharesRej'),
     modalDeviceSharesRating: document.getElementById('modalDeviceSharesRating'),
     hwCpuModel: document.getElementById('hwCpuModel'),
+    hwPlatform: document.getElementById('hwPlatform'),
     hwThreads: document.getElementById('hwThreads'),
     hwTemp: document.getElementById('hwTemp'),
     hwIp: document.getElementById('hwIp'),
@@ -1039,11 +1040,16 @@ window.showDeviceConsoleDetail = function(worker) {
     elements.modalDeviceSharesRej.textContent = Math.floor((worker.rating || 0) * 0.005);
     elements.modalDeviceSharesRating.textContent = Math.round((worker.rating || 0) * 1.1) || '0';
 
-    const isIntel = (worker.id || '').toLowerCase().includes('pc') || (worker.id || '').toLowerCase().includes('desktop');
-    elements.hwCpuModel.textContent = isIntel ? 'AMD Ryzen 9 5950X 16-Core Processor' : 'ARM Cortex-A78 Octa-Core';
-    elements.hwThreads.textContent = isAlive ? (isIntel ? '24 / 32 Activos' : '6 / 8 Activos') : '0 Activos';
-    elements.hwTemp.textContent = isAlive ? (isIntel ? '62.4°C' : '45.2°C') : 'Ambient (°C)';
-    elements.hwIp.textContent = `192.168.1.${100 + Math.floor(Math.random() * 90)}`;
+    const cores = navigator.hardwareConcurrency;
+    elements.hwCpuModel.textContent = cores ? `${cores} núcleos lógicos (reportado por este navegador)` : 'No disponible en este navegador';
+
+    elements.hwPlatform.textContent = (navigator.userAgentData?.platform) || navigator.platform || 'No disponible';
+
+    const ramGb = navigator.deviceMemory;
+    elements.hwThreads.textContent = ramGb ? `≈ ${ramGb} GB (aprox., solo Chrome/Android)` : 'No disponible en este navegador';
+
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    elements.hwIp.textContent = conn?.effectiveType ? conn.effectiveType.toUpperCase() : 'No disponible en este navegador';
 
     switchDetailTab('telemetry');
     elements.deviceDetailsModal.classList.add('open');
@@ -1149,12 +1155,10 @@ function init() {
     };
     window.openTool = function(tool) {
         if (tool === 'account') {
-            activateTab('tools');
-            setTimeout(() => {
-                const credentials = document.querySelector('.wallet-credentials-panel');
-                credentials?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 150);
-            showToast('Abriendo Cuenta');
+            const acct = accounts[activeAccountIndex];
+            document.getElementById('accountModalName').textContent = acct ? acct.name : 'Sin cartera activa';
+            document.getElementById('accountModalAddr').textContent = acct ? `${acct.address.substring(0, 10)}...${acct.address.slice(-6)}` : '—';
+            document.getElementById('accountOptionsModal').classList.add('open');
             return;
         }
         activateTab('tools');

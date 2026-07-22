@@ -648,6 +648,62 @@
     </div>
   </div>
 
+  <!-- SECCIÓN CUENTA (opciones) -->
+  <div class="modal-overlay" id="accountOptionsModal" style="z-index: 300;">
+    <div class="settings-sheet" style="padding: 24px 24px 30px 24px; border-radius: 32px 32px 0 0; background: #0d1425;">
+        <div class="settings-header" style="padding: 0 0 16px 0;">
+            <div class="close-circle" onclick="document.getElementById('accountOptionsModal').classList.remove('open')">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            <h2>Cuenta</h2>
+            <div style="width: 36px;"></div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px; padding: 10px 4px 20px 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px;">
+            <div style="width:44px; height:44px; border-radius:12px; background: rgba(255,140,26,0.12); display:flex; align-items:center; justify-content:center; color: var(--accent);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h4M15 12h4M6 16h5"/></svg>
+            </div>
+            <div>
+                <div id="accountModalName" style="font-weight:800; font-size:15px; color:#fff;">Cargando cartera...</div>
+                <div id="accountModalAddr" style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace; margin-top:2px;">—</div>
+            </div>
+        </div>
+
+        <div class="settings-row" onclick="document.getElementById('accountOptionsModal').classList.remove('open'); setTimeout(()=>{ activateTab('tools'); const c=document.querySelector('.wallet-credentials-panel'); c?.scrollIntoView({behavior:'smooth', block:'center'}); }, 250);">
+            <div class="row-icon" style="background: rgba(99,102,241,0.15); color: #818cf8;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="row-label">Ver dirección y claves</span>
+            <svg class="row-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <div class="settings-row" onclick="document.getElementById('accountOptionsModal').classList.remove('open'); toggleAccountDropdown(event);">
+            <div class="row-icon" style="background: rgba(16,185,129,0.15); color: var(--success);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="row-label">Cambiar o añadir cuenta</span>
+            <svg class="row-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <div class="settings-row" onclick="document.getElementById('accountOptionsModal').classList.remove('open'); setTimeout(openChangePinModal, 200);">
+            <div class="row-icon" style="background: rgba(255,140,26,0.15); color: var(--accent);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </div>
+            <span class="row-label">Cambiar PIN</span>
+            <svg class="row-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <div class="settings-row" onclick="document.getElementById('accountOptionsModal').classList.remove('open'); showToast('Sección cerrada');" style="border-bottom: none;">
+            <div class="row-icon" style="background: rgba(255,255,255,0.06); color: #94a3b8;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </div>
+            <span class="row-label">Cerrar sección</span>
+        </div>
+
+        <button class="continue-btn secondary danger-btn" style="width:100%; margin-top: 16px;" onclick="document.getElementById('accountOptionsModal').classList.remove('open'); clearAllData();">Cerrar sección y borrar datos</button>
+    </div>
+  </div>
+
   <!-- CALCULADORA DE MONERO -->
   <div class="modal-overlay" id="calculatorModal" style="z-index: 350;">
     <div class="settings-sheet" style="padding: 24px 24px 40px 24px; border-radius: 32px 32px 0 0; background: #0d1425;">
@@ -778,35 +834,34 @@
             </div>
         </div>
 
-        <!-- HARDWARE DIAGNOSTICS SECTION -->
+        <!-- HARDWARE DIAGNOSTICS SECTION (datos reales que el navegador sí puede reportar) -->
         <div id="detailSectionHardware" style="display: none; flex-direction: column; gap: 16px;">
+            <div class="dashboard-panel" style="padding: 14px; background: rgba(255,140,26,0.06); border: 1px solid rgba(255,140,26,0.2);">
+                <p style="font-size: 11px; color: #FF8C1A; margin: 0; line-height: 1.5;">⚠️ Un navegador no tiene permiso para leer el modelo real del CPU, su temperatura ni la IP local del dispositivo minero. Aquí solo se muestra lo que el navegador de <strong>este</strong> teléfono/PC sí puede reportar sobre sí mismo.</p>
+            </div>
             <div class="dashboard-panel" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                 <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Modelo de Procesador</span>
-                    <span id="hwCpuModel" style="font-size: 12px; font-weight: 700; color: #fff;">ARM Cortex-A78 Octa-Core</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Núcleos lógicos del navegador</span>
+                    <span id="hwCpuModel" style="font-size: 12px; font-weight: 700; color: #fff;">—</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Arquitectura del Núcleo</span>
-                    <span style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">aarch64 (64-bit)</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Plataforma / Sistema</span>
+                    <span id="hwPlatform" style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">—</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Asignación de Hilos</span>
-                    <span id="hwThreads" style="font-size: 12px; font-weight: 700; color: var(--accent);">6 / 8 Activos</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Memoria RAM aproximada</span>
+                    <span id="hwThreads" style="font-size: 12px; font-weight: 700; color: var(--accent);">—</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Temperatura del Silicio</span>
-                    <span id="hwTemp" style="font-size: 12px; font-weight: 700; color: #ef4444;">45.2°C</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Temperatura del dispositivo</span>
+                    <span id="hwTemp" style="font-size: 12px; font-weight: 700; color: #64748b;">No disponible (los navegadores no exponen esta métrica)</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Memoria Caché L1/L2</span>
-                    <span style="font-size: 12px; font-weight: 700; color: #fff;">4 MB L3 Cache</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Dirección IP Local</span>
-                    <span id="hwIp" style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">192.168.1.84</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Tipo de conexión de red</span>
+                    <span id="hwIp" style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">—</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 12px; color: var(--text-dim);">Puerto / Algoritmo</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Algoritmo (según diseño de la app)</span>
                     <span style="font-size: 12px; font-weight: 700; color: #00D1FF; font-family: 'JetBrains Mono', monospace;">RandomX (rx/0)</span>
                 </div>
             </div>
