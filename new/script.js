@@ -29,6 +29,7 @@ const elements = {
     unlockPinDisplay: document.getElementById('unlockPinDisplay'),
     unlockPromptText: document.getElementById('unlockPromptText'),
     activeAccountName: document.getElementById('activeAccountName'),
+    toolsActiveAccountName: document.getElementById('toolsActiveAccountName'),
     cardWalletAccountName: document.getElementById('cardWalletAccountName'),
     displayActiveWalletName: document.getElementById('displayActiveWalletName'),
     quickSwitchDropdown: document.getElementById('quickSwitchDropdown'),
@@ -466,7 +467,8 @@ window.pressUnlockPin = function(num) {
         updateUnlockPinDots();
     }
     if (unlockPinInput.length === 4) {
-        elements.unlockPromptText.textContent = 'Presiona OK para desbloquear';
+        elements.unlockPromptText.textContent = 'Verificando...';
+        setTimeout(verifyUnlockPin, 150);
     } else {
         elements.unlockPromptText.textContent = 'Ingresa tu código PIN de 4 dígitos';
     }
@@ -476,6 +478,17 @@ window.clearUnlockPin = function() {
     unlockPinInput = "";
     elements.unlockPromptText.textContent = 'Ingresa tu código PIN de 4 dígitos';
     updateUnlockPinDots();
+};
+
+/** Botón "Regresar" de la pantalla de PIN: cierra el overlay sin
+ * desbloquear nada. Si se estaba pidiendo el PIN para revelar una clave
+ * sensible, cancela esa revelación. */
+window.regresarUnlockScreen = function() {
+    unlockPinInput = "";
+    updateUnlockPinDots();
+    elements.unlockPromptText.textContent = 'Ingresa tu código PIN de 4 dígitos';
+    pendingRevealMask = null;
+    elements.unlockScreen.style.display = 'none';
 };
 
 function updateUnlockPinDots() {
@@ -521,6 +534,94 @@ function verifyUnlockPin() {
     }
 }
 
+// ------- Flujo de "Cambiar PIN" (dentro de Cuenta) -------
+let changePinStage = 'current'; // 'current' -> 'new' -> 'confirm'
+let changePinInput = '';
+let changePinFirstNew = '';
+
+window.openChangePinModal = function() {
+    const acct = accounts[activeAccountIndex];
+    if (!acct) {
+        showToast('No hay cuenta activa');
+        return;
+    }
+    changePinStage = 'current';
+    changePinInput = '';
+    changePinFirstNew = '';
+    document.getElementById('changePinPromptText').textContent = 'Ingresa tu PIN actual';
+    updateChangePinDots();
+    document.getElementById('changePinModal').style.display = 'flex';
+};
+
+window.regresarChangePinModal = function() {
+    changePinInput = '';
+    updateChangePinDots();
+    document.getElementById('changePinModal').style.display = 'none';
+};
+
+window.clearChangePin = function() {
+    changePinInput = '';
+    updateChangePinDots();
+};
+
+function updateChangePinDots() {
+    const dots = document.getElementById('changePinDots').querySelectorAll('.pin-dot');
+    dots.forEach((dot, idx) => {
+        if (idx < changePinInput.length) dot.classList.add('filled');
+        else dot.classList.remove('filled');
+    });
+}
+
+window.pressChangePin = function(num) {
+    if (changePinInput.length < 4) {
+        changePinInput += num;
+        updateChangePinDots();
+    }
+    if (changePinInput.length === 4) {
+        setTimeout(advanceChangePinStage, 150);
+    }
+};
+
+function advanceChangePinStage() {
+    const acct = accounts[activeAccountIndex];
+    const promptEl = document.getElementById('changePinPromptText');
+
+    if (changePinStage === 'current') {
+        if (changePinInput !== acct.pin) {
+            showToast('PIN actual incorrecto');
+            changePinInput = '';
+            updateChangePinDots();
+            return;
+        }
+        changePinStage = 'new';
+        changePinInput = '';
+        updateChangePinDots();
+        promptEl.textContent = 'Ingresa tu nuevo PIN';
+    } else if (changePinStage === 'new') {
+        changePinFirstNew = changePinInput;
+        changePinStage = 'confirm';
+        changePinInput = '';
+        updateChangePinDots();
+        promptEl.textContent = 'Confirma tu nuevo PIN';
+    } else if (changePinStage === 'confirm') {
+        if (changePinInput !== changePinFirstNew) {
+            showToast('Los PIN no coinciden, intenta de nuevo');
+            changePinStage = 'new';
+            changePinInput = '';
+            changePinFirstNew = '';
+            updateChangePinDots();
+            promptEl.textContent = 'Ingresa tu nuevo PIN';
+            return;
+        }
+        acct.pin = changePinInput;
+        saveAccountsToStorage();
+        changePinInput = '';
+        updateChangePinDots();
+        document.getElementById('changePinModal').style.display = 'none';
+        showToast('PIN actualizado correctamente');
+    }
+}
+
 function saveAccountsToStorage() {
     localStorage.setItem('dcc_accounts', JSON.stringify(accounts));
     localStorage.setItem('dcc_active_idx', activeAccountIndex);
@@ -546,6 +647,7 @@ function clearAllData() {
     elements.keySpendText.textContent = 'No cargada';
     elements.keyViewText.textContent = 'No cargada';
     elements.activeAccountName.textContent = 'Cartera eliminada';
+    if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = 'Cartera eliminada';
     elements.cardWalletAccountName.textContent = 'Cartera eliminada';
     elements.displayActiveWalletName.textContent = 'Cartera eliminada';
     elements.walletInput.value = '';
@@ -560,6 +662,7 @@ function loadActiveAccount() {
     const acct = accounts[activeAccountIndex];
     if (!acct) {
         elements.activeAccountName.textContent = 'Sin cartera activa';
+        if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = 'Sin cartera activa';
         elements.cardWalletAccountName.textContent = 'Sin cartera activa';
         elements.displayActiveWalletName.textContent = 'Sin cartera activa';
         elements.walletInput.value = '';
@@ -571,6 +674,7 @@ function loadActiveAccount() {
     }
 
     elements.activeAccountName.textContent = acct.name;
+    if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = acct.name;
     elements.cardWalletAccountName.textContent = acct.name;
     elements.displayActiveWalletName.textContent = acct.name;
     elements.walletInput.value = acct.address;

@@ -279,9 +279,9 @@
         <button class="pin-btn" onclick="pressUnlockPin(7)">7</button>
         <button class="pin-btn" onclick="pressUnlockPin(8)">8</button>
         <button class="pin-btn" onclick="pressUnlockPin(9)">9</button>
-        <button class="pin-btn" onclick="clearUnlockPin()" style="font-size: 13px; color: var(--text-dim); background: transparent; border: none;">BORRAR</button>
+        <button class="pin-btn" onclick="clearUnlockPin()" style="font-size: 13px; color: var(--text-dim); background: transparent; border: none;">CLEAR</button>
         <button class="pin-btn" onclick="pressUnlockPin(0)">0</button>
-        <button class="pin-btn" onclick="verifyUnlockPin()" style="font-size: 13px; color: var(--success); font-weight: 800; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3);">OK</button>
+        <button class="pin-btn" onclick="regresarUnlockScreen()" style="font-size: 12px; color: var(--text-dim); background: transparent; border: none;">Regresar</button>
       </div>
     </div>
   </div>
@@ -493,13 +493,18 @@
             <div class="tool-card-title">Propinas</div>
             <div class="tool-card-subtitle">Cuentas en grupo</div>
           </div>
-          <div class="tool-card" onclick="openTool('settings')">
-            <div class="tool-card-icon">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </div>
-            <div class="tool-card-title">Ajustes</div>
-            <div class="tool-card-subtitle">Tema, moneda y datos</div>
+        </div>
+
+        <!-- Fila de Cuenta: muestra la cartera activa y despliega el menú de cambiar/añadir cuentas -->
+        <div class="settings-row" id="toolsAccountRow" onclick="toggleAccountDropdown(event)" style="margin-top: 8px; cursor: pointer;">
+          <div class="row-icon" style="background: rgba(99,102,241,0.15); color: #818cf8;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </div>
+          <div style="flex: 1;">
+            <span class="row-label">Cuenta</span>
+            <div id="toolsActiveAccountName" style="font-size: 12px; color: var(--text-dim); margin-top: 2px; font-weight: 600;">Cargando cartera...</div>
+          </div>
+          <svg class="row-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
 
         <!-- APP SETTINGS INSIDE TOOLS -->
@@ -566,10 +571,42 @@
             <div class="credential-value" id="keyViewText">No cargada</div>
           </div>
         </div>
-        <div class="tools-footer-row">
-          <button class="continue-btn secondary danger-btn" onclick="clearAllData()" style="width:100%;">Cerrar sección y borrar datos</button>
+        <div class="tools-footer-row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="continue-btn secondary" onclick="openChangePinModal()" style="flex:1; min-width:140px;">Cambiar PIN</button>
+          <button class="continue-btn secondary danger-btn" onclick="clearAllData()" style="flex:1; min-width:140px;">Cerrar sección y borrar datos</button>
         </div>
       </section>
+
+      <!-- Modal: Cambiar PIN de la cuenta activa -->
+      <div class="setup-screen" id="changePinModal" style="display:none; z-index: 530; background: radial-gradient(circle at center, #101626 0%, #03050c 100%);">
+        <div class="starry-background"></div>
+        <div style="display:flex; flex-direction:column; align-items:center; margin-top:60px; width:100%; padding: 0 24px;">
+          <div class="setup-title">Cambiar PIN</div>
+          <p style="font-size:13px; color: var(--text-dim); margin-top:5px;" id="changePinPromptText">Ingresa tu PIN actual</p>
+
+          <div class="pin-dots" id="changePinDots" style="margin-top:24px;">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+
+          <div class="pin-pad" style="margin-top:30px;">
+            <button class="pin-btn" onclick="pressChangePin(1)">1</button>
+            <button class="pin-btn" onclick="pressChangePin(2)">2</button>
+            <button class="pin-btn" onclick="pressChangePin(3)">3</button>
+            <button class="pin-btn" onclick="pressChangePin(4)">4</button>
+            <button class="pin-btn" onclick="pressChangePin(5)">5</button>
+            <button class="pin-btn" onclick="pressChangePin(6)">6</button>
+            <button class="pin-btn" onclick="pressChangePin(7)">7</button>
+            <button class="pin-btn" onclick="pressChangePin(8)">8</button>
+            <button class="pin-btn" onclick="pressChangePin(9)">9</button>
+            <button class="pin-btn" onclick="clearChangePin()" style="font-size:13px; color: var(--text-dim); background: transparent; border: none;">CLEAR</button>
+            <button class="pin-btn" onclick="pressChangePin(0)">0</button>
+            <button class="pin-btn" onclick="regresarChangePinModal()" style="font-size:12px; color: var(--text-dim); background: transparent; border: none;">Regresar</button>
+          </div>
+        </div>
+      </div>
 
     </main>
 
