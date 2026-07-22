@@ -74,7 +74,7 @@ const elements = {
     hwThreads: document.getElementById('hwThreads'),
     hwTemp: document.getElementById('hwTemp'),
     hwIp: document.getElementById('hwIp'),
-    modalDeviceLogsTerminal: document.getElementById('modalDeviceLogsTerminal'),
+
     keyAddrText: document.getElementById('keyAddrText'),
     keySeedText: document.getElementById('keySeedText'),
     keySpendText: document.getElementById('keySpendText'),
@@ -418,9 +418,11 @@ function updateSetupPinDots() {
     const dots = elements.setupPinDots.querySelectorAll('.pin-dot');
     dots.forEach((dot, idx) => {
         if (idx < setupPinInput.length) {
-            dot.classList.add('filled');
+            dot.classList.add('filled', 'reveal');
+            dot.textContent = setupPinInput[idx];
         } else {
-            dot.classList.remove('filled');
+            dot.classList.remove('filled', 'reveal');
+            dot.textContent = '';
         }
     });
 }
@@ -491,15 +493,28 @@ window.regresarUnlockScreen = function() {
     elements.unlockScreen.style.display = 'none';
 };
 
+let unlockRevealTimer = null;
 function updateUnlockPinDots() {
     const dots = elements.unlockPinDots.querySelectorAll('.pin-dot');
     dots.forEach((dot, idx) => {
         if (idx < unlockPinInput.length) {
             dot.classList.add('filled');
         } else {
-            dot.classList.remove('filled');
+            dot.classList.remove('filled', 'reveal');
+            dot.textContent = '';
         }
     });
+    if (unlockRevealTimer) clearTimeout(unlockRevealTimer);
+    if (unlockPinInput.length > 0) {
+        const lastIdx = unlockPinInput.length - 1;
+        const lastDot = dots[lastIdx];
+        lastDot.classList.add('reveal');
+        lastDot.textContent = unlockPinInput[lastIdx];
+        unlockRevealTimer = setTimeout(() => {
+            lastDot.classList.remove('reveal');
+            lastDot.textContent = '';
+        }, 700);
+    }
     const masked = unlockPinInput.split('').map(() => '•').join('');
     elements.unlockPinDisplay.textContent = masked.padEnd(4, '-');
 }
@@ -564,12 +579,27 @@ window.clearChangePin = function() {
     updateChangePinDots();
 };
 
+let changePinRevealTimer = null;
 function updateChangePinDots() {
     const dots = document.getElementById('changePinDots').querySelectorAll('.pin-dot');
     dots.forEach((dot, idx) => {
         if (idx < changePinInput.length) dot.classList.add('filled');
-        else dot.classList.remove('filled');
+        else {
+            dot.classList.remove('filled', 'reveal');
+            dot.textContent = '';
+        }
     });
+    if (changePinRevealTimer) clearTimeout(changePinRevealTimer);
+    if (changePinInput.length > 0) {
+        const lastIdx = changePinInput.length - 1;
+        const lastDot = dots[lastIdx];
+        lastDot.classList.add('reveal');
+        lastDot.textContent = changePinInput[lastIdx];
+        changePinRevealTimer = setTimeout(() => {
+            lastDot.classList.remove('reveal');
+            lastDot.textContent = '';
+        }, 700);
+    }
 }
 
 window.pressChangePin = function(num) {
@@ -646,7 +676,7 @@ function clearAllData() {
     elements.keySeedText.textContent = 'No cargada';
     elements.keySpendText.textContent = 'No cargada';
     elements.keyViewText.textContent = 'No cargada';
-    elements.activeAccountName.textContent = 'Cartera eliminada';
+    elements.activeAccountName.textContent = '----';
     if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = 'Cartera eliminada';
     elements.cardWalletAccountName.textContent = 'Cartera eliminada';
     elements.displayActiveWalletName.textContent = 'Cartera eliminada';
@@ -661,7 +691,7 @@ function clearAllData() {
 function loadActiveAccount() {
     const acct = accounts[activeAccountIndex];
     if (!acct) {
-        elements.activeAccountName.textContent = 'Sin cartera activa';
+        elements.activeAccountName.textContent = '----';
         if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = 'Sin cartera activa';
         elements.cardWalletAccountName.textContent = 'Sin cartera activa';
         elements.displayActiveWalletName.textContent = 'Sin cartera activa';
@@ -673,7 +703,7 @@ function loadActiveAccount() {
         return;
     }
 
-    elements.activeAccountName.textContent = acct.name;
+    elements.activeAccountName.textContent = (acct.address || '----').substring(0, 4);
     if (elements.toolsActiveAccountName) elements.toolsActiveAccountName.textContent = acct.name;
     elements.cardWalletAccountName.textContent = acct.name;
     elements.displayActiveWalletName.textContent = acct.name;
@@ -891,6 +921,16 @@ async function syncNanopool() {
     } catch (e) {}
 }
 
+window.manualReloadDevices = function() {
+    const icon = document.getElementById('devicesReloadIcon');
+    if (icon) icon.style.animation = 'spin 0.7s linear infinite';
+    elements.devicesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-dim);">Sincronizando dispositivos...</div>';
+    syncWorkers().finally(() => {
+        if (icon) icon.style.animation = '';
+        showToast('Dispositivos actualizados');
+    });
+};
+
 async function syncWorkers() {
     const activeAcct = accounts[activeAccountIndex];
     if (!activeAcct || !activeAcct.address) {
@@ -958,23 +998,39 @@ function renderWorkers(workers) {
     elements.inactiveCount.textContent = inactive;
 }
 
+function formatTimeAgo(unixSeconds) {
+    const diffMs = Date.now() - (unixSeconds * 1000);
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'hace instantes';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `hace ${diffH}h ${diffMin % 60}m`;
+    const diffD = Math.floor(diffH / 24);
+    return `hace ${diffD}d`;
+}
+
 window.showDeviceConsoleDetail = function(worker) {
     selectedWorkerObj = worker;
     const isAlive = worker.hashrate > 0;
 
     elements.modalDeviceTitle.textContent = worker.id || 'Worker';
+    const lastShareTs = worker.lastshare || worker.lastreport || null;
     if (isAlive) {
         elements.modalDeviceStatusDot.style.background = 'var(--success)';
         elements.modalDeviceStatusDot.style.boxShadow = '0 0 10px var(--success)';
         elements.modalDeviceStatusText.textContent = 'MINANDO ACTIVAMENTE';
         elements.modalDeviceStatusText.style.color = 'var(--success)';
-        elements.modalDeviceUptime.textContent = 'UPTIME: 14h 32m 05s';
+        elements.modalDeviceUptime.textContent = lastShareTs
+            ? `ÚLTIMO SHARE: ${formatTimeAgo(lastShareTs)}`
+            : 'ÚLTIMO SHARE: sin datos';
     } else {
         elements.modalDeviceStatusDot.style.background = '#475569';
         elements.modalDeviceStatusDot.style.boxShadow = 'none';
         elements.modalDeviceStatusText.textContent = 'DESCONECTADO / INACTIVO';
         elements.modalDeviceStatusText.style.color = 'var(--text-dim)';
-        elements.modalDeviceUptime.textContent = 'UPTIME: --';
+        elements.modalDeviceUptime.textContent = lastShareTs
+            ? `SIN ACTIVIDAD DESDE: ${formatTimeAgo(lastShareTs)}`
+            : 'SIN DATOS DE ACTIVIDAD';
     }
 
     elements.modalDeviceHashrate.textContent = `${worker.hashrate || 0} H/s`;
@@ -989,59 +1045,15 @@ window.showDeviceConsoleDetail = function(worker) {
     elements.hwTemp.textContent = isAlive ? (isIntel ? '62.4°C' : '45.2°C') : 'Ambient (°C)';
     elements.hwIp.textContent = `192.168.1.${100 + Math.floor(Math.random() * 90)}`;
 
-    generateDeviceLogs(worker.id || 'Worker', isAlive);
     switchDetailTab('telemetry');
     elements.deviceDetailsModal.classList.add('open');
 };
-
-function generateDeviceLogs(name, isAlive) {
-    const term = elements.modalDeviceLogsTerminal;
-    term.innerHTML = '';
-
-    const baseLogs = [
-        `[SYSTEM] Iniciando daemon de minería nativa para ${name}...`,
-        `[SYSTEM] Cargando algoritmo RandomX (rx/0) optimizado.`,
-        `[SYSTEM] Configurando conexiones de socket local...`,
-    ];
-
-    if (isAlive) {
-        baseLogs.push(
-            `[INFO] Pool: xmr-us-east1.nanopool.org:14433`,
-            `[SUCCESS] Conexión establecida con éxito con Nanopool.`,
-            `[INFO] CPU tuning: Activando Large Pages de memoria para optimizar hashrate.`,
-            `[OK] Solución criptográfica óptima para RandomX inicializada.`,
-            `[MINER] Velocidad de cómputo registrada: ${selectedWorkerObj.hashrate} H/s`,
-            `[SUCCESS] Share aceptada por el nodo Nanopool (latencia 185ms).`
-        );
-    } else {
-        baseLogs.push(
-            `[WARNING] Intento de conexión fallido a xmr-us-east1.nanopool.org:14433`,
-            `[ERROR] Dispositivo inactivo. Reintentando protocolo de enlace en 60 segundos...`,
-            `[SYSTEM] Hilos de procesamiento puestos en modo reposo.`
-        );
-    }
-
-    baseLogs.forEach(log => {
-        const div = document.createElement('div');
-        div.textContent = log;
-        if (log.includes('[SUCCESS]') || log.includes('[OK]')) {
-            div.style.color = 'var(--success)';
-        } else if (log.includes('[ERROR]') || log.includes('[WARNING]')) {
-            div.style.color = 'var(--error)';
-        } else if (log.includes('[INFO]')) {
-            div.style.color = '#00D1FF';
-        }
-        term.appendChild(div);
-    });
-    term.scrollTop = term.scrollHeight;
-}
 
 window.switchDetailTab = function(tabName) {
     document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
 
     document.getElementById('detailSectionTelemetry').style.display = 'none';
     document.getElementById('detailSectionHardware').style.display = 'none';
-    document.getElementById('detailSectionLogs').style.display = 'none';
 
     if (tabName === 'telemetry') {
         document.getElementById('detailSectionTelemetry').style.display = 'flex';
@@ -1049,9 +1061,6 @@ window.switchDetailTab = function(tabName) {
     } else if (tabName === 'hardware') {
         document.getElementById('detailSectionHardware').style.display = 'flex';
         document.querySelectorAll('.detail-tab')[1].classList.add('active');
-    } else if (tabName === 'logs') {
-        document.getElementById('detailSectionLogs').style.display = 'flex';
-        document.querySelectorAll('.detail-tab')[2].classList.add('active');
     }
 };
 
@@ -1060,9 +1069,6 @@ window.triggerDeviceAction = function(action) {
         showToast(`Reiniciando minero en ${selectedWorkerObj?.id || 'dispositivo'}...`);
         setTimeout(() => {
             showToast("Minero reiniciado con éxito.");
-            if (selectedWorkerObj) {
-                generateDeviceLogs(selectedWorkerObj.id, true);
-            }
         }, 1500);
     } else if (action === 'ping') {
         showToast("Calculando latencia de red contra el Pool de Monero...");

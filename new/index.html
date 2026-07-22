@@ -293,16 +293,13 @@
       <div class="header-brand-container">
         <!-- Exact Header requested brand title "DevCenterX Crypto" -->
         <span class="header-title-text" style="font-size: 16px;">DevCenterX Crypto</span>
-        <!-- Multi-Account switching toggle badge -->
-        <div class="account-switcher-badge" id="accountSwitcherBadge" onclick="toggleAccountDropdown(event)">
-          <span id="activeAccountName">Cargando Cartera...</span>
-          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+        <!-- Ya no cambia de cuenta aquí (eso ahora vive en Tools -> Cuenta). Solo referencia rápida de la dirección activa. -->
+        <div class="account-switcher-badge" id="accountSwitcherBadge" style="cursor: default;">
+          <span id="activeAccountName">----</span>
         </div>
       </div>
 
-      <!-- Quick Switch Dropdown View -->
+      <!-- Quick Switch Dropdown View (ahora se abre solo desde Tools -> Cuenta) -->
       <div class="quick-switch-dropdown" id="quickSwitchDropdown">
         <div style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; padding-left: 4px;">MIS CARTERAS</div>
         <div id="dropdownAccountsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;">
@@ -428,8 +425,12 @@
 
       <!-- PANTALLA: DISPOSITIVOS -->
       <section class="screen" id="screen-devices">
-        <div class="user-row" style="margin-bottom: 24px;">
+        <div class="user-row" style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
           <span class="username">Mis Dispositivos</span>
+          <button class="btn-sm" id="devicesReloadBtn" onclick="manualReloadDevices()" style="display:flex; align-items:center; gap:6px;">
+            <svg id="devicesReloadIcon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Recargar
+          </button>
         </div>
 
         <div style="display: flex; gap: 12px; margin-bottom: 24px;">
@@ -498,7 +499,7 @@
         <!-- Fila de Cuenta: muestra la cartera activa y despliega el menú de cambiar/añadir cuentas -->
         <div class="settings-row" id="toolsAccountRow" onclick="toggleAccountDropdown(event)" style="margin-top: 8px; cursor: pointer;">
           <div class="row-icon" style="background: rgba(99,102,241,0.15); color: #818cf8;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h4M15 12h4M6 16h5"/></svg>
           </div>
           <div style="flex: 1;">
             <span class="row-label">Cuenta</span>
@@ -573,6 +574,7 @@
         </div>
         <div class="tools-footer-row" style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="continue-btn secondary" onclick="openChangePinModal()" style="flex:1; min-width:140px;">Cambiar PIN</button>
+          <button class="continue-btn secondary" onclick="activateTab('mining'); showToast('Sección cerrada')" style="flex:1; min-width:140px;">Cerrar sección</button>
           <button class="continue-btn secondary danger-btn" onclick="clearAllData()" style="flex:1; min-width:140px;">Cerrar sección y borrar datos</button>
         </div>
       </section>
@@ -725,7 +727,6 @@
         <div style="display: flex; gap: 8px; background: rgba(255, 255, 255, 0.03); padding: 5px; border-radius: 30px;">
             <button class="detail-tab active" onclick="switchDetailTab('telemetry')">TELEMETRÍA</button>
             <button class="detail-tab" onclick="switchDetailTab('hardware')">HARDWARE</button>
-            <button class="detail-tab" onclick="switchDetailTab('logs')">LOGS DEL SISTEMA</button>
         </div>
 
         <!-- TELEMETRY CONTENT SECTION -->
@@ -808,12 +809,6 @@
                     <span style="font-size: 12px; color: var(--text-dim);">Puerto / Algoritmo</span>
                     <span style="font-size: 12px; font-weight: 700; color: #00D1FF; font-family: 'JetBrains Mono', monospace;">RandomX (rx/0)</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- LOGS AND EVENTS CONSOLE TERMINAL -->
-        <div id="detailSectionLogs" style="display: none; flex-direction: column; gap: 16px;">
-            <div style="background: #000; border: 1px solid var(--blue-circle-border); border-radius: 16px; padding: 15px; height: 300px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.4; color: #00ff41; box-shadow: inset 0 0 20px rgba(0,255,65,0.05);" id="modalDeviceLogsTerminal">
             </div>
         </div>
 

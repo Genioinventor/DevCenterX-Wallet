@@ -1001,9 +1001,34 @@
     .manual-section.visible {
       display: flex;
     }
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: transparent;
+      transition: var(--smooth-transition);
+    }
+    .pin-dot.filled {
       background: var(--accent);
       border-color: var(--accent);
       transform: scale(1.2);
+    }
+    /* Mientras se está tecleando (o siempre, en la creación de PIN) se ve el dígito real */
+    .pin-dot.reveal {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(255,140,26,0.12);
+      color: #fff;
+      transform: scale(1);
     }
 
     /* Quick Account Switcher Dropdown */
@@ -1407,4 +1432,9 @@
   color: var(--accent);
   border-color: rgba(255,140,26,0.35);
   background: rgba(255,140,26,0.08);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
